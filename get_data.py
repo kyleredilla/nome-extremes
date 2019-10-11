@@ -1,5 +1,7 @@
 import cdsapi
-c = cdsapi.client()
+
+c = cdsapi.Client()
+
 c.retrieve(
     'reanalysis-era5-single-levels',
     {
@@ -20,4 +22,4 @@ c.retrieve(
         ],
         'format':'netcdf'
     },
-    'download.nc')
+    '/workspace/UA/kmredilla/Nome_Mets/data/test_download.nc')
