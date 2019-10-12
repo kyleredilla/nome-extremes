@@ -39,4 +39,4 @@ c.retrieve(
         ],
         'format':'netcdf'
     },
-    '/workspace/UA/kmredilla/Nome_Mets/data/test_download.nc')
+    '/workspace/UA/kmredilla/Nome_Mets/data/test_download_2018.nc')
