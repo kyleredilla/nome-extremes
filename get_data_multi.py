@@ -1,5 +1,4 @@
-# Test script for downloading ERA5 data using SLURM and multiprocessing,
-#   and extracting data for Nome and surrounding grid cells, for 5 years
+# Download ERA5 data for four grid cells around Nome using SLURM and multiprocessing
 
 import cdsapi
 
@@ -57,3 +56,9 @@ if __name__ == '__main__':
 	pool = Pool()
 	pool.map(get_data, years)
 	print("Multi run took %s seconds" % (time.time() - start_time))
+
+	# serial run
+	start_time = time.time()
+	for year in years:
+		get_data(year)
+	print("Serial run took %s seconds" % (time.time() - start_time))
