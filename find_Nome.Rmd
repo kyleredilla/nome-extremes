@@ -1,0 +1,53 @@
+---
+title: "Find Nome"
+output: pdf_document
+---
+# Display Nome in the ERA5 grid
+
+```{r setup, echo = FALSE}
+library(ncdf4)
+library(knitr)
+
+# extract lon and lat from nc file and close
+sf_path <- "data/testing/ERA5_snowfall_2010.nc"
+sf <- nc_open(sf_path)
+lon <- ncvar_get(sf, varid = "longitude")
+lat <- ncvar_get(sf, varid = "latitude")
+nc_close(sf)
+
+Nlon <- -165.406387
+Nlat <- 64.501114
+Nome_coords <- c(Nlon, Nlat)
+Nome_coords[1] <- 360 - Nome_coords[1] * (-1)
+Nome_coords <- data.frame(x = Nome_coords[1], y = Nome_coords[2])
+```
+
+Nome coordinates: `r paste0("Lon: ", Nlon, "; Lat: ", Nlat, " (lat used in ERA5: ", Nome_coords[1], ")")`
+
+```{r plot, echo = FALSE}
+# plot grid and Nome
+xc <- lon[777:781]
+yc <- lat[101:105]
+coords <- expand.grid(xc, yc)
+plot(coords, pch = 19, xlab = "Lon", ylab = "Lat")
+points(Nome_coords, col = "red", pch = 19)
+
+# save extent values of the four cells around Nome (N and S and East)
+xd <- Nome_coords$x[1] - xc 
+yd <- Nome_coords$y[1] - yc
+# west extent index
+wei <- which(xd == min(xd[which(xd > 0)]))
+# east extent index
+eei <- wei + 2
+# south extent index
+sei <- which(yd == min(abs(yd))) + 1
+# North extent index
+nei <- sei - 2
+
+bb <- data.frame(value = c(yc[nei], xc[wei], yc[sei], xc[eei]),
+                 extent = c("north", "west", "south", "east"))
+write.csv(bb, "data/Nome_bb.csv")
+
+```
+
+The bounds for the four cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)`
