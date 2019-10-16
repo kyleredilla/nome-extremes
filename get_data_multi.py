@@ -42,13 +42,13 @@ def get_data(year):
 	        'area':[64.75, 194.50, 64.25, 195],
 	        'format':'netcdf'
 	    },
-	    '/workspace/UA/kmredilla/Nome_Mets/data/testing/ERA5_snowfall_Nome_' + year + '.nc')
+	    '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_snowfall_Nome_quad_' + year + '.nc')
 
 if __name__ == '__main__':
 	from multiprocessing import Pool
 	import time
-	# operate on years 2010-2018
-	years = list(range(2014, 2019))
+	# operate on years 1979-2018
+	years = list(range(1979, 2019))
 	years = [str(i) for i in years]
 
 	# multiprocessing run
@@ -56,9 +56,3 @@ if __name__ == '__main__':
 	pool = Pool()
 	pool.map(get_data, years)
 	print("Multi run took %s seconds" % (time.time() - start_time))
-
-	# serial run
-	start_time = time.time()
-	for year in years:
-		get_data(year)
-	print("Serial run took %s seconds" % (time.time() - start_time))
