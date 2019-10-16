@@ -47,20 +47,23 @@ def get_data(years):
         '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_' + var + '_Nome_quad_' + years[0] + '-' + year[-1] + '.nc')
 
 if __name__ == '__main__':
+    import copy
     from multiprocessing import Pool
 
     # operate on years 1979-2018, broken into 4 chunks
-    years = [list(range(1979, 1991)),
-             list(range(1991, 2003)),
-             list(range(2003, 2015)),
-             list(range(2015, 2019))]
-    years = [[str(j) for j in i] for i in years]
-
+    years_sf = [list(range(1979, 1991)),
+                list(range(1991, 2003)),
+                list(range(2003, 2015)),
+                list(range(2015, 2019))]
+    years_sf = [[str(j) for j in i] for i in years_sf]
+    years_sd = copy.deepcopy(years_sf)
+    # add var names to year lists
+    for i in range(4):
+            years_sf[i].append('snowfall')
+            years_sd[i].append('snow_depth')
     # multiprocessing run
     pool = Pool()
     # snowfall
-    years_sf = [i.append('snowfall') for i in years]
     pool.map(get_data, years_sf)
     # Snow depth
-    years_sd = [i.append('snow_depth') for i in years]
     pool.map(get_data, years_sd)
