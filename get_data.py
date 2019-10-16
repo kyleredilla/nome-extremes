@@ -60,7 +60,7 @@ if __name__ == '__main__':
     pool = Pool()
     # snowfall
     years_sf = [i.append('snowfall') for i in years]
-    pool.map(get_data, years)
+    pool.map(get_data, years_sf)
     # Snow depth
     years_sd = [i.append('snow_depth') for i in years]
-    pool.map(get_data, years)
+    pool.map(get_data, years_sd)
