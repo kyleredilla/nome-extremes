@@ -3,7 +3,8 @@
 
 import cdsapi
 
-def get_data(var, years):
+def get_data(years):
+    var = years.pop(-1)
     c = cdsapi.Client()
     c.retrieve(
         'reanalysis-era5-single-levels',
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     # multiprocessing run
     pool = Pool()
     # snowfall
-    pool.map(get_data(var='snowfall'), years)
+    years_sf = [i.append('snowfall') for i in years]
+    pool.map(get_data, years)
     # Snow depth
-    pool.map(get_data(var='snow_depth'), years)
-
+    years_sd = [i.append('snow_depth') for i in years]
+    pool.map(get_data, years)
