@@ -55,7 +55,7 @@ if __name__ == '__main__':
                 list(range(1991, 2003)),
                 list(range(2003, 2015)),
                 list(range(2015, 2019))]
-    years_st = [[str(j) for j in i] for i in years_sf]
+    years_st = [[str(j) for j in i] for i in years_st]
     # add var names to year lists
     for i in range(4):
             years_st[i].append('skin_temperature')
