@@ -1,4 +1,4 @@
-# Download ERA5 "skin temp"data for four grid cells around Nome using SLURM
+# Download ERA5 "2m Temperature"data for four grid cells around Nome using SLURM
 # full time span request too large, need to breakup into chunks
 
 import cdsapi
@@ -56,9 +56,9 @@ if __name__ == '__main__':
                 list(range(2003, 2015)),
                 list(range(2015, 2019))]
     years_st = [[str(j) for j in i] for i in years_st]
-    # add var names to year lists
+    # add var name to year lists
     for i in range(4):
-            years_st[i].append('skin_temperature')
+            years_st[i].append('2m_temperature')
     # multiprocessing run
     pool = Pool()
     # skin temperature
