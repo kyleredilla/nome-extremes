@@ -9,7 +9,7 @@ library(ncdf4)
 library(knitr)
 
 # extract lon and lat from nc file and close
-sf_path <- "data/testing/ERA5_snowfall_2010.nc"
+sf_path <- "data/ERA5_snowfall_Nome_quad_1979-1990.nc"
 sf <- nc_open(sf_path)
 lon <- ncvar_get(sf, varid = "longitude")
 lat <- ncvar_get(sf, varid = "latitude")
@@ -22,7 +22,7 @@ Nome_coords[1] <- 360 - Nome_coords[1] * (-1)
 Nome_coords <- data.frame(x = Nome_coords[1], y = Nome_coords[2])
 ```
 
-Nome coordinates: `r paste0("Lon: ", Nlon, "; Lat: ", Nlat, " (lat used in ERA5: ", Nome_coords[1], ")")`
+Nome coordinates: `r paste0("Lon: ", Nlon, "; Lat: ", Nlat, " (lon used in ERA5: ", Nome_coords[1], ")")`
 
 ```{r plot, echo = FALSE}
 # plot grid and Nome
