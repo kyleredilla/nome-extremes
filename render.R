@@ -16,4 +16,8 @@ doc_dir <- file.path(workdir, "documents")
 
 #-- Render Files --------------------------------------------------------------
 # find_Nome.pdf
-fn <- "find_Nome.Rmd"; render(fn, output_dir = doc_dir)
+render("find_Nome.Rmd", output_dir = doc_dir)
+
+# compare_data.pdf
+render("compare_data.Rmd", output_dir = doc_dir,
+       output_file = "Nome_ERA5_Distance")
