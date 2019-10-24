@@ -72,7 +72,7 @@ compute_dist <- function(sim, obs) {
       filter(ij == cell) %>% 
       select(-ij) %>% 
       as.matrix()
-    round(sqrt(sum((X - Y)^2)))
+    sqrt(sum((X - Y)^2))
   }
   
   sapply(cells, cell_dist, sim, obs)
@@ -100,8 +100,6 @@ library(abind)
 library(lubridate)
 library(dplyr)
 library(ggplot2)
-
-
 
 # vars: snowfall, snow depth, min temp, max temp, avg temp
 sf <- lapply(mk_ncfns("snowfall"), extract_nc) %>% 
@@ -149,23 +147,6 @@ nome <- nome[date >= begin & date <= end, ]
 # compare distance between each grid point 
 dists <- compute_dist(era5, nome)
 
-get_coords(dists)
+dist_df <- get_coords(dists)
 
-
-
-
-
-
-
-sf_mo <- sf_df %>% 
-  ungroup() %>%
-  mutate(date = format(date, "%Y-%m")) %>%
-  group_by(date, ij) %>%
-  summarise(var = sum(sum_var)) %>%
-  ungroup() %>%
-  mutate(date = ymd(paste0(date, "-01")))
-
-
-ggplot(sf_mo, aes(date, var, color = ij)) + 
-  geom_line(size = 1) + 
-  scale_x_date(limits = c("1970-01-01", "1972-01-01"))
+saveRDS(dist_df, "data/dist_results.Rds")
