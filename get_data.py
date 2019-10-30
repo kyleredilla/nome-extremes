@@ -1,4 +1,4 @@
-# Download ERA5 data snowfall and snow depth for four grid cells around Nome using SLURM
+# Download ERA5 output of snowfall, snow depth, and air temperature for four grid cells around Nome using SLURM
 # full time span request too large, need to breakup into chunks
 
 import cdsapi
@@ -41,29 +41,26 @@ def get_data(years):
                 '18:00','19:00','20:00',
                 '21:00','22:00','23:00'
             ],
-            'area':[64.75, 194.50, 64.25, 195],
+            'area':[64.75, 194.25, 64.25, 194.75],
             'format':'netcdf'
         },
-        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_' + var + '_Nome_quad_' + years[0] + '-' + years[-1] + '.nc')
+        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_sf_sd_ta_Nome_quad_' + years[0] + '-' + years[-1] + '.nc')
 
 if __name__ == '__main__':
     import copy
     from multiprocessing import Pool
 
     # operate on years 1979-2018, broken into 4 chunks
-    years_sf = [list(range(1979, 1991)),
-                list(range(1991, 2003)),
-                list(range(2003, 2015)),
-                list(range(2015, 2019))]
-    years_sf = [[str(j) for j in i] for i in years_sf]
-    years_sd = copy.deepcopy(years_sf)
+    years = [list(range(1979, 1991)),
+             list(range(1991, 2003)),
+             list(range(2003, 2015)),
+             list(range(2015, 2019))]
+    years = [[str(j) for j in i] for i in years]
     # add var names to year lists
     for i in range(4):
-            years_sf[i].append('snowfall')
-            years_sd[i].append('snow_depth')
+            years[i].append(['snowfall', 'snow_depth', '2m_temperature'])
     # multiprocessing run
     pool = Pool()
-    # snowfall
-    pool.map(get_data, years_sf)
-    # Snow depth
-    pool.map(get_data, years_sd)
+    # get all data
+    pool.map(get_data, years)
+    
