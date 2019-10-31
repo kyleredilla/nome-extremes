@@ -50,11 +50,17 @@ if __name__ == '__main__':
     import copy
     from multiprocessing import Pool
 
-    # operate on years 1979-2018, broken into 4 chunks
-    years = [list(range(1979, 1991)),
-             list(range(1991, 2003)),
-             list(range(2003, 2015)),
-             list(range(2015, 2019))]
+    # operate on years 1979-2018, broken into 10 chunks to satisfy request limit
+    years = [list(range(1979, 1983)),
+             list(range(1983, 1987)),
+             list(range(1987, 1991)),
+             list(range(1991, 1995)),
+             list(range(1995, 1999)),
+             list(range(1999, 2003)),
+             list(range(2003, 2007)),
+             list(range(2007, 2011)),
+             list(range(2011, 2015)),
+             list(range(2015, 2019)),]
     years = [[str(j) for j in i] for i in years]
     # add var names to year lists
     for i in range(4):
