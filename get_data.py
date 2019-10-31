@@ -63,7 +63,7 @@ if __name__ == '__main__':
              list(range(2015, 2019)),]
     years = [[str(j) for j in i] for i in years]
     # add var names to year lists
-    for i in range(4):
+    for i in range(10):
             years[i].append(['snowfall', 'snow_depth', '2m_temperature'])
     # multiprocessing run
     pool = Pool()
