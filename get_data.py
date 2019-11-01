@@ -44,7 +44,7 @@ def get_data(years):
             'area':[64.5, 194.5, 64, 195],
             'format':'netcdf'
         },
-        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_sf_sd_ta_Nome_quad_' + years[0] + '-' + years[-1] + '.nc')
+        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_sf_sd_ta_Nome_sector_' + years[0] + '-' + years[-1] + '.nc')
 
 if __name__ == '__main__':
     import copy
