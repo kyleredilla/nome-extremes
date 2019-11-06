@@ -1,0 +1,248 @@
+---
+title: "Nome-ERA5 Extremes Comparison"
+output: pdf_document
+---
+
+Daily observations of three variables at Nome (snowfall, snow depth, and temperature) were summarized for comparison with ERA5 data from the surrounding 9 grid points to inform choice of grid cell(s) to use in further analyses.  
+
+## Results
+
+```{r setup, echo = FALSE}
+# compare extreme events between observed values at Nome and 
+#   era5 grid cells
+
+# convert C to F
+C_to_F <- function(deg_C) {
+  deg_C * (9/5) + 32
+}
+
+# load and prep daily data
+prep_daily <- function(fn) {
+  # Daily data 
+  # only need these vars
+  vars <- c("DATE", 
+            "SNOW", "SNOW_ATTRIBUTES", "SNWD", "SNWD_ATTRIBUTES", 
+            "TMIN", "TMIN_ATTRIBUTES", "TMAX", "TMAX_ATTRIBUTES", 
+            "TAVG", "TAVG_ATTRIBUTES")
+  # better rnames
+  bnames <- c("date", 
+              "sf", "sf_attr", "sd", "sd_attr", 
+              "tmin", "tmin_attr", "tmax", "tmax_attr", 
+              "tavg", "tavg_attr")
+  nome <- fread(fn, select = vars, col.names = bnames)
+  
+  # convert to correct type and units (m and C) and 
+  #   subset to matching time frame
+  begin <- ymd("1979-01-01")
+  end <- ymd("2018-12-31")
+  nome[, ':=' (date = ymd(date),
+               year = year(date),
+               decade = year(date) - year(date) %% 10,
+               sf = as.numeric(sf)/1000,
+               sd = as.numeric(sd)/1000,
+               tmin = C_to_F(as.numeric(tmin)/10),
+               tmax = C_to_F(as.numeric(tmax)/10),
+               tavg = C_to_F(as.numeric(tavg)/10))]
+  nome[, ym := format(date, "%Y-%m")]
+  nome <- nome[date >= begin & date <= end, ]
+}
+
+# sumarize era5 temp data (count number of extremes each year)
+sumi_era5_tmin <- function(df, decade = FALSE, thr = -40) {
+  df <- df %>% mutate(year = year(date))
+  if(decade) {
+    df %>% 
+      mutate(decade = year(date) - year(date) %% 10,
+             tmin = C_to_F(tmin)) %>%
+      group_by(decade, ij) %>%
+      summarise(count = sum(tmin <= thr))
+  } else {
+    df %>%
+      group_by(year, ij) %>%
+      summarise(count = sum(tmin <= thr),
+                max_sd = max(sd))
+  }
+}
+
+# count totals of extremes and counts in common with observed
+total_era5_tmin <- function(df, obs_DT) {
+  df <- df %>%
+    left_join(obs_DT, by = "year") %>%
+    mutate(common = pmin(count, obs_count)) %>%
+    group_by(ij) %>%
+    summarise(total = sum(count), 
+              common = sum(common))
+  return(df)
+}
+
+# summarize era5 snowfall
+sumi_era5_sf <- function(df) {
+  df %>%
+    mutate(ym = format(date, "%Y-%m"),
+           month = month(date)) %>%
+    group_by(month, ym, ij) %>%
+    summarise(sum_sf = sum(sf)) %>%
+    group_by(month) %>%
+    summarise(avg_sf = mean(sum_sf))
+}
+
+# summarize era5 snow depth
+sumi_era5_sd <- function(df) {
+  df %>%
+    mutate(year = year(date)) %>%
+    group_by(year, ij) %>%
+    summarise(max_sd = max(sd))
+}
+
+# summarize Nome temps
+sumi_Nome_tmin <- function(DT, decade = FALSE, thr = -40) {
+  if(decade) {
+    DT <- DT[, keyby = .(decade), .(obs_count = sum(tmin <= thr))]
+  } else {
+    DT <- DT[, keyby = .(year), .(obs_count = sum(tmin <= thr))] 
+  }
+  as.data.frame(DT)
+}
+
+# summarize Nome snowfall
+sumi_Nome_sf <- function(DT) {
+  DT <- DT[, keyby = .(month, ym),
+           .(sum_sf = sum(sf, na.rm = TRUE))]
+  DT <- DT[, keyby = .(month), .(avg_sf = mean(sum_sf))]
+  as.data.table(DT)
+}
+
+# summarize Nome snow depth
+sumi_Nome_sd <- function(DT) {
+  DT <- DT[, keyby = .(year),
+           .(max_sd = max(sd, na.rm = TRUE))]
+  as.data.frame(DT)
+}
+
+# compute distance between a vector and each col of df
+compute_dist <- function(df, Y) {
+  # drop year col
+  X <- as.matrix(df[, -1])
+  apply(X, 2, function(X, Y) dist(rbind(X, Y)), Y)
+}
+
+# make a df of rect boundaries and colors from df of grid center points
+#   and land proportions
+make_mask_df <- function(df) {
+  res <- 0.25/2
+  data.frame(xleft = df[, 1] - res, xright = df[, 1] + res,
+             ybottom = df[, 2] - res, ytop = df[, 2] + res)
+}
+
+# add wgs84 coords to df with ij col
+add_coords <- function(df) {
+  lon <- c(194.25, 194.5, 194.75)
+  lat <- c(64.75, 64.5, 64.25)
+  temp <- expand.grid(lon, lat)
+  df$lon <- temp[, 1]
+  df$lat <- temp[, 2]
+  return(df)
+}
+
+# make land sea mask df
+make_mask <- function(lsm_fn) {
+  nc <- nc_open(lsm_fn)
+  lon <- ncvar_get(nc, "longitude")
+  lat <- ncvar_get(nc, "latitude")
+  lsm <- ncvar_get(nc, "lsm")
+  nc_close(nc)
+  df <- expand.grid(lon, lat)
+  names(df) <- c("lon", "lat")
+  df$lsm <- round(as.vector(lsm))
+  res <- 0.25/2
+  df %>%
+    mutate(xleft = lon - res,
+           ybottom = lat - res,
+           xright = lon + res,
+           ytop = lat + res)
+}
+
+# plot tmin comparison results
+plot_tmin <- function(df, mask) {
+  # make Nome coords
+  Nlon <- -165.406387
+  Nlat <- 64.501114
+  Nome_coords <- c(Nlon, Nlat)
+  Nome_coords[1] <- 360 - Nome_coords[1] * (-1)
+  Nome_coords <- data.frame(x = Nome_coords[1], y = Nome_coords[2])
+  mask_cols <- c("#3399FF", "#669900")
+  plot(mask$lon, mask$lat, xlab = "Lon", ylab = "Lat")
+  rect(mask$xleft, mask$ybottom, mask$xright, mask$ytop,
+       col = mask_cols[mask$lsm+1])
+  text(df$lon, df$lat - 0.05, round(df$total))
+  text(df$lon + 0.05, df$lat - 0.055, paste0("(", round(df$common), ")"))
+  points(mask$lon, mask$lat, pch = 19)
+  points(Nome_coords, col = "red", pch = 19)
+}
+
+library(data.table)
+library(dplyr)
+library(lubridate)
+library(ncdf4)
+library(knitr)
+
+nome <- prep_daily("data/Nome_daily.csv")
+
+# era 5 data of grid cells surrounding Nome
+era5 <- readRDS("data/era5.Rds")
+
+# land sea mask filepath
+lsm_fn <- "data/ERA5_land_sea_mask_Nome_sector.nc"
+mask <- make_mask(lsm_fn)
+
+# desired outputs
+
+# grid with total counts of temp anomalies (days where tmin <= -40, -35)
+# counts of co-ocurring temp anomalies (presented as fraction of total anomalies
+#   e.g. 8 anomalies (6/8 co-ocurring in same year))
+
+# count <= tmin threshold for the Nome sector grid cells by year
+tmin40_nome <- sumi_Nome_tmin(nome)
+tmin35_nome <- sumi_Nome_tmin(nome, thr = -35)
+# total nome counts 
+tot_40_nome <- tmin40_nome %>% filter(obs_count > 0)
+tot_35_nome <- tmin35_nome %>% filter(obs_count > 0)
+```
+
+#### Temperature Anomalies
+
+Below are the counts of days where the minimum temperature ($T_{min}$) was $\leq$ -40 degrees (top figure) and -35 degrees (bottom figure). The total count is the number directly below the grid cell center dot, and the number of counts in common with observations at Nome is in parentheses.  
+
+Nome is the red dot.  
+
+```{r plot_tmin, echo = FALSE}
+
+# compare with Nome observations and plot
+# -40
+sumi_era5_tmin(era5) %>% 
+  total_era5_tmin(tmin40_nome) %>% 
+  add_coords() %>%
+  plot_tmin(mask)
+# -35
+tmin35_df <- sumi_era5_tmin(era5, thr = -35) %>% 
+  total_era5_tmin(tmin40_nome) %>% 
+  add_coords() %>%
+  plot_tmin(mask)
+
+
+
+# grid with distances between max snow depth
+#max_sd_era5 <- sumi_era5_sd(era5) %>% tidyr::spread(ij, max_sd)
+#max_sd_Nome <- sumi_Nome_sd(nome)
+#compute_dist(max_sd_era5, max_sd_Nome$max_sd)
+
+# dotplot with month on x axis and monthly mean values of snowfall
+
+#extr_results <- readRDS("data/extr_results.Rds")
+
+
+```
+
+Here is a summary of the **observed** number of days in each year where $T_{min}$ fell below -40: `r kable(tot_40_nome)`  
+
+and below -35: `r kable(tot_35_nome)`

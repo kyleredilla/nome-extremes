@@ -1,0 +1,55 @@
+---
+title: "Nome-ERA5 Distance"
+output: pdf_document
+---
+
+Euclidean distance between data observed in Nome and ERA5 output at nearby points was computed to determine which ERA5 data point has the greatest correspondence with observations at Nome. This distance distance metric was calculated based on observations/output of daily snowfall, snow depth (daily average taken for ERA5 data), minimum 2m air temperature and maximum 2m air temperature. 
+
+```{r setup, echo = FALSE}
+library(ncdf4)
+library(knitr)
+library(dplyr)
+
+# extract lon and lat from nc file and close
+sf_path <- "data/ERA5_snowfall_entire_grid_2010.nc"
+sf <- nc_open(sf_path)
+lon <- ncvar_get(sf, varid = "longitude")
+lat <- ncvar_get(sf, varid = "latitude")
+nc_close(sf)
+
+Nlon <- -165.406387
+Nlat <- 64.501114
+Nome_coords <- c(Nlon, Nlat)
+Nome_coords[1] <- 360 - Nome_coords[1] * (-1)
+Nome_coords <- data.frame(x = Nome_coords[1], y = Nome_coords[2])
+
+dist_df <- readRDS("data/dist_results.Rds")
+# half of grid res
+rh <- 0.25/2
+dist_df <- dist_df %>%
+  mutate(xleft = lon - rh,
+         ybottom = lat - rh,
+         xright = lon + rh,
+         ytop = lat + rh,
+         drank = rank(dist),
+         col = terrain.colors(9)[drank])
+```
+
+Below is a plot displaying results. Darker green represents lower distance between Nome and the ERA5 grid point (greater similarity) and lighter colors represent greater distance. Nome is the red dot, and values are the computed distances. ERA5 data were only downloaded for the 9 points colored.
+
+```{r plot, echo=FALSE, fig.height=5, fig.width=5.25, fig.align="center"}
+
+# set new palette
+# plot grid and Nome
+xc <- lon[777:781]
+yc <- lat[101:105]
+coords <- expand.grid(xc, yc)
+plot(coords, pch = 19, xlab = "Lon", ylab = "Lat")
+rect(dist_df$xleft, dist_df$ybottom, dist_df$xright, dist_df$ytop, 
+     col = dist_df$col)
+points(coords, pch = 19)
+points(Nome_coords, col = "red", pch = 19)
+text(dist_df$lon, dist_df$lat - 0.08, round(dist_df$dist))
+
+```
+
