@@ -17,7 +17,7 @@ library(ncdf4)
 library(knitr)
 
 # extract lon and lat from nc file and close
-lsm_path <- "data/ERA5_land_sea_mask_Nome_sector.nc"
+lsm_path <- "F:/raw_data/Nome_Mets/ERA5_land_sea_mask_Nome_sector.nc"
 lsm_nc <- nc_open(lsm_path)
 lon <- ncvar_get(lsm_nc, varid = "longitude")
 lat <- ncvar_get(lsm_nc, varid = "latitude")
@@ -65,4 +65,4 @@ write.csv(bb, "data/Nome_bb.csv")
 
 ```
 
-The bounds for the four cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)`
+The bounds for the nine cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)` and are saved as **Nome_bb.csv**

@@ -11,13 +11,14 @@ Daily observations of three variables at Nome (snowfall, snow depth, and tempera
 # compare extreme events between observed values at Nome and 
 #   era5 grid cells
 
+#-- Functions -----------------------------------------------------------------
 # convert C to F
 C_to_F <- function(deg_C) {
   deg_C * (9/5) + 32
 }
 
 # load and prep daily data
-prep_daily <- function(fn) {
+prep_daily <- function() {
   # Daily data 
   # only need these vars
   vars <- c("DATE", 
@@ -29,6 +30,7 @@ prep_daily <- function(fn) {
               "sf", "sf_attr", "sd", "sd_attr", 
               "tmin", "tmin_attr", "tmax", "tmax_attr", 
               "tavg", "tavg_attr")
+  fn <- "F:/raw_data/Nome_Mets/Nome_daily.csv"
   nome <- fread(fn, select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
@@ -82,7 +84,7 @@ sumi_era5_sf <- function(df) {
            month = month(date)) %>%
     group_by(month, ym, ij) %>%
     summarise(sum_sf = sum(sf)) %>%
-    group_by(month) %>%
+    group_by(month, ij) %>%
     summarise(avg_sf = mean(sum_sf))
 }
 
@@ -106,6 +108,7 @@ sumi_Nome_tmin <- function(DT, decade = FALSE, thr = -40) {
 
 # summarize Nome snowfall
 sumi_Nome_sf <- function(DT) {
+  DT[, month := month(date)]
   DT <- DT[, keyby = .(month, ym),
            .(sum_sf = sum(sf, na.rm = TRUE))]
   DT <- DT[, keyby = .(month), .(avg_sf = mean(sum_sf))]
@@ -145,8 +148,9 @@ add_coords <- function(df) {
 }
 
 # make land sea mask df
-make_mask <- function(lsm_fn) {
-  nc <- nc_open(lsm_fn)
+make_mask <- function() {
+  fn <- "F:/raw_data/Nome_Mets/ERA5_land_sea_mask_Nome_sector.nc"
+  nc <- nc_open(fn)
   lon <- ncvar_get(nc, "longitude")
   lat <- ncvar_get(nc, "latitude")
   lsm <- ncvar_get(nc, "lsm")
@@ -160,6 +164,15 @@ make_mask <- function(lsm_fn) {
            ybottom = lat - res,
            xright = lon + res,
            ytop = lat + res)
+}
+
+# make Nome coords df
+Nome_coords <- function() {
+  Nlon <- -165.406387
+  Nlat <- 64.501114
+  nome_coords <- c(Nlon, Nlat)
+  nome_coords[1] <- 360 - nome_coords[1] * (-1)
+  data.frame(x = nome_coords[1], y = nome_coords[2])
 }
 
 # plot tmin comparison results
@@ -180,20 +193,97 @@ plot_tmin <- function(df, mask) {
   points(Nome_coords, col = "red", pch = 19)
 }
 
+# snow depth distance
+sd_dist <- function(era5_sd, nome_sd) {
+  cells <- levels(era5_sd$ij)
+  cell_dist <- function(cell, era5_sd, nome_sd) {
+    Y <- nome_sd$max_sd
+    X <- era5_sd %>% 
+      ungroup %>%
+      filter(ij == cell) %>% 
+      select(max_sd) %>% 
+      unlist
+    sqrt(sum((X - Y)^2))
+  }
+  dists <- sapply(cells, cell_dist, era5_sd, nome_sd)
+  data.frame(ij = names(dists), dist = dists)
+}
+
+# plot snow depth dist
+plot_sd_dist <- function(df, mask, nome_coords) {
+  mask_cols <- c("#3399FF", "#669900")
+  plot(mask$lon, mask$lat, xlab = "Lon", ylab = "Lat",
+       xaxp = c(194, 195, 4),
+       yaxp = c(64, 65, 4))
+  rect(mask$xleft, mask$ybottom, mask$xright, mask$ytop,
+       col = mask_cols[mask$lsm+1])
+  text(df$lon, df$lat - 0.05, round(df$dist, 1))
+  points(mask$lon, mask$lat, pch = 19)
+  points(nome_coords, col = "red", pch = 19)
+}
+
+# plot snow depth time series
+plot_sd_ts <- function(era5_sd, nome_sd) {
+  nome_sd %>%
+    mutate(ij = "Nome") %>%
+    select(year, ij, max_sd) %>%
+    bind_rows(era5_sd) %>%
+    ggplot(aes(year, max_sd, color = factor(ij))) +
+      geom_point() + 
+      geom_line() + 
+      xlab("Year") +
+      ylab("Maximum Snow Depth") + 
+      labs(color = "ERA5 Position") +
+      theme_bw() + 
+      theme(legend.position = "top")
+}
+
+# plot snowfall dotplot
+plot_sf <- function(era5_sf, nome_sf) {
+  # colors
+  cols <- brewer.pal(10, "Spectral")
+  cols[10] <- "#000000"
+  # line types (only Nome different)
+  ltys <- c(rep(1, 9), 2)
+  nome_sf %>%
+    mutate(ij = "Nome") %>%
+    select(month, ij, avg_sf) %>%
+    bind_rows(era5_sf) %>%
+    mutate(mo_abb = factor(month.abb[month], 
+                           levels = month.abb)) %>%
+    ggplot(aes(mo_abb, avg_sf, color = factor(ij))) +
+      geom_point() + 
+      geom_line(aes(group = ij, linetype = factor(ij))) + 
+      scale_color_manual(values = cols) +
+      scale_linetype_manual(values = ltys) +
+      xlab("Year") +
+      ylab("Average Snowfall (m)") + 
+      labs(color = "ERA5 Position", linetype = "ERA5 Position") +
+      theme_bw() + 
+      theme(legend.position = "top")
+}
+
+#------------------------------------------------------------------------------
+
 library(data.table)
 library(dplyr)
 library(lubridate)
 library(ncdf4)
 library(knitr)
+library(RColorBrewer)
+library(ggplot2)
 
-nome <- prep_daily("data/Nome_daily.csv")
+opts_chunk$set(echo = FALSE, 
+               warning = FALSE, 
+               message = FALSE)
+
+nome <- prep_daily()
 
 # era 5 data of grid cells surrounding Nome
 era5 <- readRDS("data/era5.Rds")
 
 # land sea mask filepath
-lsm_fn <- "data/ERA5_land_sea_mask_Nome_sector.nc"
-mask <- make_mask(lsm_fn)
+mask <- make_mask()
 
 # desired outputs
 
@@ -216,17 +306,17 @@ Below are the counts of days where the minimum temperature ($T_{min}$) was $\leq
 Nome is the red dot.  
 
 ```{r plot_tmin, echo = FALSE}
-
+nome_coords <- Nome_coords()
 # compare with Nome observations and plot
 # -40
 sumi_era5_tmin(era5) %>% 
   total_era5_tmin(tmin40_nome) %>% 
-  add_coords() %>%
+  add_coords %>%
   plot_tmin(mask)
 # -35
 tmin35_df <- sumi_era5_tmin(era5, thr = -35) %>% 
   total_era5_tmin(tmin40_nome) %>% 
-  add_coords() %>%
+  add_coords %>%
   plot_tmin(mask)
 
 
@@ -246,3 +336,43 @@ tmin35_df <- sumi_era5_tmin(era5, thr = -35) %>%
 Here is a summary of the **observed** number of days in each year where $T_{min}$ fell below -40: `r kable(tot_40_nome)`  
 
 and below -35: `r kable(tot_35_nome)`
+
+#### Maximum Snow Depth
+Maximum snow depth was found for each year at Nome and at the surrounding nine ERA5 grid points. Euclidean distance was computed based on these time series as metric of similarity between observed values and the ERA5 grid cells.  
+
+The following plot presents resulting distances in text below each grid cell center point. 
+
+```{r max_sd_grid}
+# plot euclidean distance between Nome and surrounding cells based
+#   on snow depth as values on grid of land-sea mask
+nome_sd <- sumi_Nome_sd(nome)
+era5_sd <- sumi_era5_sd(era5)
+era5_sd %>%
+  sd_dist(nome_sd) %>%
+  add_coords %>%
+  plot_sd_dist(mask, nome_coords)
+
+```
+
+The following plot presents the time series of maximum snow depth values for Nome and the surrounding nine ERA5 grid points. Note the ERA5 i,j position is matrix position (row, column from upper- left-most cell (1,1)) of the grid cells for which we have data.  
+
+I think the discrepancy here is largely due to the difference in units of snow depth - ERA5 output is as m of water equivalent. 
+
+```{r max_sd_ts}
+# plot max snow depth time series
+era5_sd %>%
+  plot_sd_ts(nome_sd)
+
+```
+
+#### Snowfall
+Snowfall was summed over each year-month and then averaged by month. The following plot presents the average values for each month for Nome and the surrounding nine ERA5 grid points.  
+
+```{r plot_sf}
+nome_sf <- sumi_Nome_sf(nome)
+sumi_era5_sf(era5) %>%
+  plot_sf(nome_sf)
+
+```
+
+Note the large discrepancy between Nome and all ERA5 grid cells - I believe this is because snowfall is output as snow water equivalent in ERA5 and GHCND contains records of snow accumulation?
