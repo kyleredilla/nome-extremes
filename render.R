@@ -3,6 +3,9 @@
 #
 # Output Files
 #   /documents/find_Nome.pdf
+#   /documents/Nome_ERA5_distance.pdf
+#   /documents/Nome_ERA5_extremes.pdf
+#   /documents/Nome_ERA5_sf_scaled.pdf
 
 
 
@@ -18,10 +21,16 @@ doc_dir <- file.path(workdir, "documents")
 # find_Nome.pdf
 render("find_Nome.Rmd", output_dir = doc_dir)
 
-# compare_dist.pdf
+# Nome_ERA5_distance.pdf
 render("compare_dist.Rmd", output_dir = doc_dir,
        output_file = "Nome_ERA5_distance")
 
-# compare_extremes.pdf
+# Nome_ERA5_extremes.pdf
 render("compare_extremes.Rmd", output_dir = doc_dir,
        output_file = "Nome_ERA5_extremes")
+
+# Nome_ERA5_sf_scaled.pdf
+render("compare_sf.Rmd", output_dir = doc_dir,
+       output_file = "Nome_ERA5_sf_scaled")
+
+#------------------------------------------------------------------------------

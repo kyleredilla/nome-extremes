@@ -1,0 +1,129 @@
+---
+title: "ERA5/Nome Snowfall Comparison"
+output: pdf_document
+---
+Because ERA5 outputs snowfall as water equivalent, a better comparison between observed and simulated snowfall would be made by scaling the ERA5 output by some factor.  
+
+```{r setup, echo = FALSE}
+
+#-- Functions -----------------------------------------------------------------
+C_to_F <- function(deg_C) {
+  deg_C * (9/5) + 32
+}
+
+# load and prep daily data
+prep_daily <- function() {
+  # Daily data 
+  # only need these vars
+  vars <- c("DATE", 
+            "SNOW", "SNOW_ATTRIBUTES", "SNWD", "SNWD_ATTRIBUTES", 
+            "TMIN", "TMIN_ATTRIBUTES", "TMAX", "TMAX_ATTRIBUTES", 
+            "TAVG", "TAVG_ATTRIBUTES")
+  # better rnames
+  bnames <- c("date", 
+              "sf", "sf_attr", "sd", "sd_attr", 
+              "tmin", "tmin_attr", "tmax", "tmax_attr", 
+              "tavg", "tavg_attr")
+  fn <- "F:/raw_data/Nome_Mets/Nome_daily.csv"
+  nome <- fread(fn, select = vars, col.names = bnames)
+  
+  # convert to correct type and units (m and C) and 
+  #   subset to matching time frame
+  begin <- ymd("1979-01-01")
+  end <- ymd("2018-12-31")
+  nome[, ':=' (date = ymd(date),
+               year = year(date),
+               decade = year(date) - year(date) %% 10,
+               sf = as.numeric(sf)/1000,
+               sd = as.numeric(sd)/1000,
+               tmin = C_to_F(as.numeric(tmin)/10),
+               tmax = C_to_F(as.numeric(tmax)/10),
+               tavg = C_to_F(as.numeric(tavg)/10))]
+  nome[, ym := format(date, "%Y-%m")]
+  nome <- nome[date >= begin & date <= end, ]
+}
+
+# summarize era5 snowfall
+sumi_era5_sf <- function(df) {
+  df %>%
+    mutate(ym = format(date, "%Y-%m"),
+           month = month(date)) %>%
+    group_by(month, ym, ij) %>%
+    summarise(sum_sf = sum(sf)) %>%
+    group_by(month, ij) %>%
+    summarise(avg_sf = mean(sum_sf))
+}
+
+# summarize Nome snowfall
+sumi_Nome_sf <- function(DT) {
+  DT[, month := month(date)]
+  DT <- DT[, keyby = .(month, ym),
+           .(sum_sf = sum(sf, na.rm = TRUE))]
+  DT <- DT[, keyby = .(month), .(avg_sf = mean(sum_sf))]
+  as.data.table(DT)
+}
+
+# plot snowfall from Nome obs and ERA5
+plot_sf <- function(era5_sf, nome_sf, scl = 7) {
+  era5_sf$avg_sf <- era5_sf$avg_sf * scl
+  # colors
+  cols <- brewer.pal(10, "Spectral")
+  cols[10] <- "#000000"
+  # line types (only Nome different)
+  ltys <- c(rep(1, 9), 2)
+  nome_sf %>%
+    mutate(ij = "Nome") %>%
+    select(month, ij, avg_sf) %>%
+    bind_rows(era5_sf) %>%
+    mutate(mo_abb = factor(month.abb[month], 
+                           levels = month.abb)) %>%
+    ggplot(aes(mo_abb, avg_sf, color = factor(ij))) +
+      geom_point() + 
+      geom_line(aes(group = ij, linetype = factor(ij))) + 
+      scale_color_manual(values = cols) +
+      scale_linetype_manual(values = ltys) +
+      xlab("Year") +
+      ylab("Average Snowfall (m)") + 
+      labs(color = "ERA5 Position", linetype = "ERA5 Position") +
+      theme_bw() + 
+      theme(legend.position = "top") + 
+      ggtitle(paste0("ERA5 * ", scl))
+}
+
+#------------------------------------------------------------------------------
+
+library(data.table)
+library(dplyr)
+library(lubridate)
+library(ncdf4)
+library(knitr)
+library(RColorBrewer)
+library(ggplot2)
+
+opts_chunk$set(echo = FALSE, 
+               warning = FALSE, 
+               message = FALSE)
+
+```
+
+Here are the monthly averages of daily snowfall for the nine ERA5 grid cells and measurements at Nome, with ERA5 data multiplied by 7:
+
+```{r sf_ts_7}
+nome <- prep_daily()
+era5 <- readRDS("data/era5.Rds")
+
+# summarise Nome snowfall
+nome_sf <- sumi_Nome_sf(nome)
+# summarise ERA5 snowfall and plot
+sumi_era5_sf(era5) %>%
+  plot_sf(nome_sf)
+
+```
+
+...and multiplied by 10:
+
+```{r sf_ts_10}
+sumi_era5_sf(era5) %>%
+  plot_sf(nome_sf, 10)
+
+```
