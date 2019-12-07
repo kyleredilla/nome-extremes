@@ -7,12 +7,14 @@ qMap <- function(obs = NULL, sim,
   
   if(is.null(use.deltas)){
     qn <- min(length(obs), length(sim))
-    qx <- quantile(sim, seq(0, 1, length.out = qn), type = 8)
-    qy <- quantile(obs, seq(0, 1, length.out = qn), type = 8)
+    qx <- quantile(sim, seq(0, 1, length.out = qn), type = 8, na.rm = TRUE)
+    qy <- quantile(obs, seq(0, 1, length.out = qn), type = 8, na.rm = TRUE)
     q_deltas <- qx - qy
   } else {
-    qx <- quantile(sim, seq(0, 1, length.out = length(use.deltas)), 
-                   type = 8)
+    qx <- quantile(
+      sim, seq(0, 1, length.out = length(use.deltas)), 
+      type = 8, na.rm = TRUE
+    )
     q_deltas = use.deltas
   }
   
@@ -37,23 +39,34 @@ qMap <- function(obs = NULL, sim,
   qi <- unlist(recycled)[order(order(qi))]
   
   sim_adj <- sim - as.numeric(q_deltas)[qi]
-  df <- data.frame(obs = obs, 
-                   sim = sim,
-                   sim_adj = sim_adj)
+  if(!is.null(use.deltas)) {
+    df <- data.frame(sim = sim, sim_adj = sim_adj)
+  } else{
+    df <- data.frame(
+      obs = obs, 
+      sim = sim,
+      sim_adj = sim_adj
+    )
+  }
+  
   # return adjusted
-  if(ret.deltas == TRUE){
+  if(ret.deltas){
     return(list(deltas = q_deltas, df = df))
   } else {return(df)}
 }
 
 # compare ECDFs to validate quantile mapping
-ggECDF_compare <- function(df, p_title = " "){
+ggECDF_compare <- function(data_lst, 
+                           p_title = " ", 
+                           xmin = -40, 
+                           var = bquote(T[min]),
+                           xmax_adj = 10) {
   require(gridExtra)
   require(ggplot2)
   
-  obs <- df$obs
-  sim <- df$sim
-  sim_adj <- df$sim_adj
+  obs <- data_lst$obs
+  sim <- data_lst$sim
+  sim_adj <- data_lst$sim_adj
   
   df1 <- data.frame(sped = c(sim, obs),
                     src = c(rep("1", length(sim)),
@@ -72,20 +85,20 @@ ggECDF_compare <- function(df, p_title = " "){
     return(legend)}
   
   # original data
-  xmax <- quantile(obs, probs = seq(0, 1, 1/100))[100] + 10
+  xmax <- quantile(obs, probs = seq(0, 1, 1/100), na.rm = TRUE)[100] + xmax_adj
   p1 <- ggplot(df1, aes(sped, color = src)) + 
     stat_ecdf(size = 1) + 
-    xlab(bquote(T[min])) + ylab("Cumulative Probability") + 
-    xlim(c(-40, xmax)) + scale_color_discrete(name = "Data", 
-                                              labels = c("Sim", "Obs")) + 
+    xlab(var) + ylab("Cumulative Probability") + 
+    xlim(c(xmin, xmax)) + 
+    scale_color_discrete(name = "Data", labels = c("Sim", "Obs")) + 
     theme(legend.position = "bottom") +
     ggtitle(p_title)
   
   # corrected data
   p2 <- ggplot(df2, aes(sped, color = src)) + 
     stat_ecdf(size = 1) + 
-    xlab(bquote(T[min])) + ylab(element_blank()) + 
-    xlim(c(-40, xmax))  + ggtitle(" ")
+    xlab(var) + ylab(element_blank()) + 
+    xlim(c(xmin, xmax))  + ggtitle(" ")
   
   # legend code adapted from:
   # https://github.com/hadley/ggplot2/wiki/Share-a-legend-between-two-ggplot2-graphs
