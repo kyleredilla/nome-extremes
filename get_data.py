@@ -41,7 +41,7 @@ def get_data(years):
                 '18:00','19:00','20:00',
                 '21:00','22:00','23:00'
             ],
-            'area':[64.5, 194.5, 64, 195],
+            'area':[64.75, 194.25, 64.25, 194.75],
             'format':'netcdf'
         },
         '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_sf_sd_ta_Nome_sector_' + years[0] + '-' + years[-1] + '.nc')
