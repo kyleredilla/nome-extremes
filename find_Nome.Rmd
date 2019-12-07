@@ -2,7 +2,10 @@
 title: "Find Nome"
 output: pdf_document
 ---
-# Display Nome in the ERA5 grid
+
+# ERA5
+
+Display Nome in the ERA5 grid
 
 ```{r setup, echo = FALSE}
 # make a df of rect boundaries and colors from df of grid center points
@@ -17,7 +20,7 @@ library(ncdf4)
 library(knitr)
 
 # extract lon and lat from nc file and close
-lsm_path <- "F:/raw_data/Nome_Mets/ERA5_land_sea_mask_Nome_sector.nc"
+lsm_path <- "F:/raw_data/Nome_Mets/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
 lsm_nc <- nc_open(lsm_path)
 lon <- ncvar_get(lsm_nc, varid = "longitude")
 lat <- ncvar_get(lsm_nc, varid = "latitude")
@@ -65,4 +68,19 @@ write.csv(bb, "data/Nome_bb.csv")
 
 ```
 
-The bounds for the nine cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)` and are saved as **Nome_bb.csv**
+The bounds for the nine ERA5 cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)` and are saved as **Nome_bb.csv**  
+
+# WRF
+
+Display Nome in the WRF grid
+
+```{r}
+# extract lon and lat from nc file and close
+fn <- "F:/raw_data/Nome_Mets/geo_em.d01.nc"
+lsm_nc <- nc_open(lsm_path)
+lon <- ncvar_get(lsm_nc, varid = "longitude")
+lat <- ncvar_get(lsm_nc, varid = "latitude")
+lsm <- ncvar_get(lsm_nc, varid = "lsm")
+nc_close(lsm_nc)
+
+```
