@@ -1,0 +1,62 @@
+---
+title: "Adjusted WRF Tmin"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+plot_tmin_ts <- function(wrf_df, ptitle) {
+  st <- wrf_df$date[1] == "1979-01-01"
+  if(st) {
+    a <- ymd("1979-01-01")
+    b <- ymd("2005-12-31")
+  } else {
+    a <- ymd("2065-01-01")
+    b <- ymd("2100-12-31")
+  }
+  
+  y1 <- -25
+  y2 <- 50
+  ggplot(wrf_df, aes(x = date, y = sim_adj)) + 
+    geom_line() + 
+    geom_segment(x = a, xend = b, y = y1, yend = y1, col = "blue") + 
+    geom_segment(x = a, xend = b, y = y2, yend = y2, col = "red") + 
+    ggtitle(ptitle) + ylab(bquote(T[min])) +
+    theme_bw()
+}
+
+add_tvec <- function(wrf_df) {
+  orig <- if(ncol(wrf_df) == 3) "1979-01-01" else "2065-01-01"
+  wrf_df$date <- as.Date(0:(dim(wrf_df)[1] - 1), origin = orig)
+  wrf_df
+}
+
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+
+gcm_fns <- c(
+  "../Nome_Mets_aux/data/cm3h_t2min_adj.Rds",
+  "../Nome_Mets_aux/data/cm3f_t2min_adj.Rds",
+  "../Nome_Mets_aux/data/ccsm4h_t2min_adj.Rds",
+  "../Nome_Mets_aux/data/ccsm4f_t2min_adj.Rds"
+)
+
+gcm_tmin_adj <- lapply(gcm_fns, readRDS)
+gcm_tmin_adj <- lapply(gcm_tmin_adj, add_tvec)
+```
+
+Below are time series of the CM3 Historical and Future adjusted $T_{min}$, with red and blue lines at 50 and -25 degrees, respectively.
+
+```{r plot_cm3, echo=FALSE, fig.asp = 0.35}
+plot_tmin_ts(gcm_tmin_adj[[1]], "CM3 Historical Adjusted Tmin")
+plot_tmin_ts(gcm_tmin_adj[[2]], "CM3 Future Adjusted Tmin")
+```
+
+Here are the same plots for the CCSM4 output.
+
+```{r plot_ccsm4, echo=FALSE, fig.asp = 0.35}
+plot_tmin_ts(gcm_tmin_adj[[3]], "CCSM4 Historical Adjusted Tmin")
+plot_tmin_ts(gcm_tmin_adj[[4]], "CCSM4 Future Adjusted Tmin")
+```
+
+
