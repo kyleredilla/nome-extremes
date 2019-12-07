@@ -12,8 +12,7 @@
 #-- Setup ---------------------------------------------------------------------
 library(rmarkdown)
 
-workdir <- getwd()
-doc_dir <- file.path(workdir, "documents")
+doc_dir <- file.path("../Nome_Mets_aux/docs")
 
 #------------------------------------------------------------------------------
 
@@ -33,4 +32,7 @@ render("compare_extremes.Rmd", output_dir = doc_dir,
 render("compare_sf.Rmd", output_dir = doc_dir,
        output_file = "Nome_ERA5_sf_scaled")
 
+# View_Adjusted_WRF_Tmin.html
+render("adj_wrf_tmin_ts.Rmd", output_dir = doc_dir,
+       output_file = "View_Adjusted_WRF_Tmin")
 #------------------------------------------------------------------------------
