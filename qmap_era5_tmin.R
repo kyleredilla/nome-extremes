@@ -28,33 +28,38 @@ get_nome_tmin <- function() {
   nome <- nome[date >= begin & date <= end, tmin]
 }
 
-# get era5_data
+# get ERA5 data
 get_era5_tmin <- function() {
-  fn <- "data/era5.Rds"
+  fn <- "../Nome_Mets_aux/data/era5.Rds"
   readRDS(fn) %>%
     ungroup() %>%
     filter(ij == "1,2") %>%
-    select(tmin) %>%
-    unlist() %>% unname() %>%
-    C_to_F()
+    select(date, tmin) %>%
+    mutate(tmin = C_to_F(tmin))
 }
 
 #------------------------------------------------------------------------------
 
-#-- Main ----------------------------------------------------------------------
+#-- Quantile Map ERA-Interim data ---------------------------------------------
 library(data.table)
 library(lubridate)
 library(dplyr)
 
 source("helpers.R")
 
-results <- get_nome_tmin() %>%
-  qMap(get_era5_tmin())
-
+nome <- get_nome_tmin()
+era5_tmin <- get_era5_tmin()
+era5_tmin_adj <- qMap(nome, era5_tmin$tmin)
+era5_tmin$tmin_adj <- era5_tmin_adj$sim_adj
+  
 # ECDFs
 p <- ggECDF_compare(results)
-# save
-fn <- "figures/qmap/tmin_ecdfs.png"
+# save validation
+fn <- "../Nome_Mets_aux/figures/qmap/tmin_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
+
+# save adjusted ERA5 output
+fn <- "../Nome_Mets_aux/data/ERA5_tmin_adj.Rds"
+saveRDS(era5_tmin, fn)
 
 #------------------------------------------------------------------------------
