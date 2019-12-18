@@ -2,17 +2,17 @@
 
 # generate filepaths for gcm tmin output
 # take bool vec for determining gcm and period
-mk_paths <- function(gcm_pd) {
-  gcm_str <- if(gcm_pd[1]) "GFDL-CM3" else "NCAR-CCSM4"
-  if(gcm_pd[2]) {
+mk_paths <- function(gcm_period) {
+  gcm_str <- if(gcm_period[1]) "GFDL-CM3" else "NCAR-CCSM4"
+  if(gcm_period[2]) {
     tf_str <- "historical"
     years <- 1979:2005
   } else {
     tf_str <- "rcp85"
-    years <- c(2065:2100)
+    years <- 2006:2100
   }
   paste0(
-    "F:/raw_data/Nome_Mets/WRF/t2min_daily_wrf_", 
+    "../raw_data/WRF/t2min_daily_wrf_", 
     gcm_str, "_", tf_str, "_", years, ".nc"
   )
 }
@@ -30,14 +30,14 @@ library(lubridate)
 
 nome_coords <- ak_coords[1, ]
 
-args <- list(
+gcm_periods_lst <- list(
   c(TRUE, TRUE),
   c(TRUE, FALSE),
   c(FALSE, TRUE),
   c(FALSE, FALSE)
 )
 
-nc_fns <- lapply(args, mk_paths)
+nc_fns <- lapply(gcm_periods_lst, mk_paths)
 wrf_t2min_K <- lapply(nc_fns, wrf_get, nome_coords)
 wrf_t2min <- lapply(wrf_t2min_K, K_to_F)
 

@@ -3,56 +3,74 @@ title: "Find Nome"
 output: pdf_document
 ---
 
+```{r desc, include = FALSE}
+# PURPOSE
+# The purpose of this script is to display Nome, AK in both the ERA5 grid and the grid used in the WRF downscaling efforts. 
+```
+
 # ERA5
 
-Display Nome in the ERA5 grid
+Nome in the ERA5 grid
 
 ```{r setup, echo = FALSE}
-# make a df of rect boundaries and colors from df of grid center points
-#   and land proportions
-make_mask_df <- function(df) {
-  res <- 0.25/2
-  data.frame(xleft = df[, 1] - res, xright = df[, 1] + res,
-             ybottom = df[, 2] - res, ytop = df[, 2] + res)
+knitr::opts_knit(echo = FALSE)
+
+# plot mask as rectangles
+plot_mask <- function(mask_df, res = 2e4) {
+  plot(mask_df[, 1:2], xlab = "Lon", ylab = "Lat")
+
+  hres <- res/2
+  rect_df <- data.frame(
+    xleft = mask_df[, 1] - hres, 
+    xright = mask_df[, 1] + hres,
+    ybottom = mask_df[, 2] - hres, 
+    ytop = mask_df[, 2] + hres
+  )
+  
+  mask_cols <- c("#3399FF", "#669900")
+  rect(
+    rect_df$xleft, rect_df$ybottom, 
+    rect_df$xright, rect_df$ytop,
+    col = mask_cols[mask_df$mask + 1]
+  )
+  
+  points(mask_df[, 1:2], pch = 19)
 }
   
 library(ncdf4)
 library(knitr)
+library(snaptools)
 
 # extract lon and lat from nc file and close
-lsm_path <- "F:/raw_data/Nome_Mets/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
-lsm_nc <- nc_open(lsm_path)
-lon <- ncvar_get(lsm_nc, varid = "longitude")
-lat <- ncvar_get(lsm_nc, varid = "latitude")
-lsm <- ncvar_get(lsm_nc, varid = "lsm")
+era_lsm_path <- "../raw_data/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
+era_lsm_nc <- nc_open(era_lsm_path)
+era_lon <- ncvar_get(era_lsm_nc, varid = "longitude")
+era_lat <- ncvar_get(era_lsm_nc, varid = "latitude")
+era_lsm <- ncvar_get(era_lsm_nc, varid = "lsm")
 nc_close(lsm_nc)
 
 Nlon <- -165.406387
 Nlat <- 64.501114
-Nome_coords <- c(Nlon, Nlat)
-Nome_coords[1] <- 360 - Nome_coords[1] * (-1)
-Nome_coords <- data.frame(x = Nome_coords[1], y = Nome_coords[2])
+Nome_coords <- data.frame(x = Nlon, y = Nlat)
+Nome_coords_era <- Nome_coords
+Nome_coords_era[, 1] <- 360 - Nome_coords_era[, 1] * (-1)
+
 ```
 
-Nome coordinates: `r paste0("Lon: ", Nlon, "; Lat: ", Nlat, " (lon used in ERA5: ", Nome_coords[1], ")")`
+Nome coordinates: `r paste0("Lon: ", Nlon, "; Lat: ", Nlat, " (lon used in ERA5: ", Nome_coords_era[1], ")")`
 
-```{r plot, echo = FALSE}
+```{r era5_grid, echo = FALSE}
 # plot grid and Nome
-coords <- expand.grid(lon, lat)
-mask_df <- make_mask_df(coords)
-mask_df$lsm <- round(as.vector(lsm))
-mask_cols <- c("#3399FF", "#669900")
+era_coords <- expand.grid(lon, lat)
+era_mask_df <- make_mask_df(coords)
+era_mask_df$mask <- round(as.vector(lsm))
 
-plot(coords, xlab = "Lon", ylab = "Lat")
-rect(mask_df$xleft, mask_df$ybottom, mask_df$xright, mask_df$ytop, 
-     col = mask_cols[mask_df$lsm+1])
-points(coords, pch = 19)
-points(Nome_coords, col = "red", pch = 19)
-
+plot_mask(era_mask_df, res = 0.5)
+points(Nome_coords_era, col = "red", pch = 19)
 
 # save extent values of the 9 cells around Nome 
-xd <- Nome_coords$x[1] - lon 
-yd <- Nome_coords$y[1] - lat
+xd <- Nome_coords_era$x[1] - era_lon 
+yd <- Nome_coords_era$y[1] - era_lat
 # west extent index
 wei <- which(xd == min(xd[which(xd > 0)])) - 1
 # east extent index
@@ -62,25 +80,25 @@ sei <- which(yd == min(abs(yd))) + 1
 # North extent index
 nei <- sei - 2
 
-bb <- data.frame(value = c(lat[nei], lon[wei], lat[sei], lon[eei]),
+bb <- data.frame(value = c(era_lat[nei], era_lon[wei], era_lat[sei], era_lon[eei]),
                  extent = c("north", "west", "south", "east"))
-write.csv(bb, "data/Nome_bb.csv")
+write.csv(bb, "../Nome_Mets_aux/data/era5_Nome_bb.csv")
 
 ```
 
-The bounds for the nine ERA5 cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)` and are saved as **Nome_bb.csv**  
+The bounds for the nine ERA5 cells around Nome (N and S and the two adjacent inland (E)) are: `r kable(bb)` and are saved as **era5_Nome_bb.csv**  
 
 # WRF
 
-Display Nome in the WRF grid
+Nome in the WRF grid
 
-```{r}
-# extract lon and lat from nc file and close
-fn <- "F:/raw_data/Nome_Mets/geo_em.d01.nc"
-lsm_nc <- nc_open(lsm_path)
-lon <- ncvar_get(lsm_nc, varid = "longitude")
-lat <- ncvar_get(lsm_nc, varid = "latitude")
-lsm <- ncvar_get(lsm_nc, varid = "lsm")
-nc_close(lsm_nc)
+```{r wrf_grid, echo = FALSE}
+# get wrf mask coordinates surrounding Nome
+mask_df <- wrf_xy(Nome_coords, ret_mask = TRUE)
+# transform Nome coords to WRF proj
+Nome_coords_wrf <- wrf_transform(Nome_coords)
+
+plot_mask(mask_df)
+points(Nome_coords_wrf, col = "red", pch = 19)
 
 ```

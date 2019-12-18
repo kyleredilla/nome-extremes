@@ -61,8 +61,8 @@ ggECDF_compare <- function(data_lst,
                            xmin = -40, 
                            var = bquote(T[min]),
                            xmax_adj = 10) {
-  require(gridExtra)
-  require(ggplot2)
+  library(gridExtra)
+  library(ggplot2)
   
   obs <- data_lst$obs
   sim <- data_lst$sim
