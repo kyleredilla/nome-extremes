@@ -61,7 +61,7 @@ fn <- "../Nome_Mets_aux/figures/qmap/era5_tmin_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
 
 # save adjusted ERA5 output
-fn <- "../Nome_Mets_aux/data/ERA5_tmin_adj.Rds"
+fn <- "../Nome_Mets_aux/data/era5_tmin_adj.Rds"
 saveRDS(era5_tmin, fn)
 
 #------------------------------------------------------------------------------
