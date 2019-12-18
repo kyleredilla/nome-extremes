@@ -13,7 +13,7 @@ get_nome_tmin <- function() {
   vars <- c("DATE", "TMIN", "TMIN_ATTRIBUTES")
   # better rnames
   bnames <- c("date", "tmin", "tmin_attr")
-  fn <- "../raw_data/Nome_Mets/Nome_daily.csv"
+  fn <- "../raw_data/GHCND/Nome.csv"
   nome <- fread(fn, select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
