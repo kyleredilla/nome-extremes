@@ -51,6 +51,8 @@ nome <- get_nome_tmin()
 era5_tmin <- get_era5_tmin()
 era5_tmin_adj <- qMap(nome, era5_tmin$tmin)
 era5_tmin$tmin_adj <- era5_tmin_adj$sim_adj
+
+results <- list(obs = nome, sim = era5_tmin$tmin, sim_adj = era5_tmin$tmin_adj)
   
 # ECDFs
 p <- ggECDF_compare(results)
