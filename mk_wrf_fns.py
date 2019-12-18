@@ -5,7 +5,7 @@
 # http://wrf-ak-ar5.s3-website-us-east-1.amazonaws.com/?prefix=hourly/GFDL-CM3/historical/acsnow/
 
 models = ["GFDL-CM3", "NCAR-CCSM4"]# {} placeholder will be substituted with specific model & historical/future
-hrly_vars = ["snow", "acsnow", "t2", "snowh"]
+hrly_vars = ["snow", "acsnow", "t2", "snowh", "pcpt"]
 
 url1 = "http://wrf-ak-ar5.s3-website-us-east-1.amazonaws.com/daily/{}/{}/t2min/"
 url2 = "http://wrf-ak-ar5.s3-website-us-east-1.amazonaws.com/hourly/{}/{}/{}/"
