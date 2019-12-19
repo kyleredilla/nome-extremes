@@ -52,10 +52,14 @@ era5_tmin <- get_era5_tmin()
 era5_tmin_adj <- qMap(nome, era5_tmin$tmin)
 era5_tmin$tmin_adj <- era5_tmin_adj$sim_adj
 
-results <- list(obs = nome, sim = era5_tmin$tmin, sim_adj = era5_tmin$tmin_adj)
+ecdf_lst <- list(
+  obs = nome, 
+  sim = era5_tmin$tmin, 
+  sim_adj = era5_tmin$tmin_adj
+)
   
 # ECDFs
-p <- ggECDF_compare(results)
+p <- ggECDF_compare(ecdf_lst)
 # save validation
 fn <- "../Nome_Mets_aux/figures/qmap/era5_tmin_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)

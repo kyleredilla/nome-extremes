@@ -49,8 +49,14 @@ era5_sf <- get_era5_sf(fn2)
 era5_sf_adj <- qMap(nome_sf, era5_sf$sf)
 era5_sf$sf_adj <- era5_sf_adj$sim_adj
 
+ecdf_lst <- list(
+  obs = nome_sf, 
+  sim = era5_sf$sf,
+  sim_adj = era5_sf$sf_adj
+)
+
 # ECDFs
-p <- ggECDF_compare(era5_sf_adj, xmin = 0, var = "sf", xmax_adj = 0)
+p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "sf", xmax_adj = 0)
 # save validation
 fn <- "../Nome_Mets_aux/figures/qmap/era5_sf_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
