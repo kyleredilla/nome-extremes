@@ -58,8 +58,14 @@ cm3f_adj <- qMap(
   use.deltas = cm3h_adj_lst$deltas
 )
 cm3h_adj <- cm3h_adj_lst$df
-cm3f_adj_lst <- list(
-  obs = cm3h_adj_lst$df$sim_adj,
+# lists for ecdf creation
+cm3h_ecdf_lst <- list(
+  obs = era5_tmin_adj$tmin_adj,
+  sim = cm3h_adj$sim, 
+  sim_adj = cm3f_adj$sim_adj
+)
+cm3f_ecdf_lst <- list(
+  obs = cm3h_adj$sim_adj,
   sim = cm3f_adj$sim, 
   sim_adj = cm3f_adj$sim_adj
 )
@@ -76,8 +82,14 @@ ccsm4f_adj <- qMap(
   use.deltas = ccsm4h_adj_lst$deltas
 )
 ccsm4h_adj <- ccsm4h_adj_lst$df
-ccsm4f_adj_lst <- list(
-  obs = ccsm4h_adj_lst$df$sim_adj,
+# lists for ecdfs
+ccsm4h_ecdf_lst <- list(
+  obs = era5_tmin_adj$tmin_adj,
+  sim = ccsm4h_adj$sim, 
+  sim_adj = ccsm4f_adj$sim_adj
+)
+ccsm4f_ecdf_lst <- list(
+  obs = ccsm4h_adj$sim_adj,
   sim = ccsm4f_adj$sim, 
   sim_adj = ccsm4f_adj$sim_adj
 )
@@ -89,14 +101,20 @@ ccsm4h_adj$date <- as.Date(rownames(wrf_t2min[[3]]))
 ccsm4f_adj$date <- as.Date(rownames(wrf_t2min[[4]]))
 
 # plot/save ECDFs
-p1 <- ggECDF_compare(cm3h_adj_lst$df, p_title = "Nome: CM3 -> ERA5")
+p1 <- ggECDF_compare(
+  cm3h_ecdf_lst$df, 
+  p_title = "Nome: CM3 -> ERA5"
+)
 p2 <- ggECDF_compare(
-  cm3f_adj_lst, 
+  cm3f_ecdf_lst, 
   p_title = "Nome: CM3F to Adj CM3H"
 )
-p3 <- ggECDF_compare(ccsm4h_adj_lst$df, p_title = "Nome: CCSM4 -> ERA5")
+p3 <- ggECDF_compare(
+  ccsm4h_ecdf_lst$df, 
+  p_title = "Nome: CCSM4 -> ERA5"
+)
 p4 <- ggECDF_compare(
-  ccsm4f_adj_lst, 
+  ccsm4f_ecdf_lst, 
   p_title = "Nome: CCSM4F -> Adj CCSM4H"
 )
 
