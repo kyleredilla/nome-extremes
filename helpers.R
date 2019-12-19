@@ -37,17 +37,9 @@ qMap <- function(obs = NULL, sim,
   })
   
   qi <- unlist(recycled)[order(order(qi))]
-  
   sim_adj <- sim - as.numeric(q_deltas)[qi]
-  if(!is.null(use.deltas)) {
-    df <- data.frame(sim = sim, sim_adj = sim_adj)
-  } else{
-    df <- data.frame(
-      obs = obs, 
-      sim = sim,
-      sim_adj = sim_adj
-    )
-  }
+
+  df <- data.frame(sim = sim, sim_adj = sim_adj)
   
   # return adjusted
   if(ret.deltas){
