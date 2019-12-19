@@ -40,7 +40,7 @@ library(dplyr)
 
 source("helpers.R")
 
-fn1 <- "F:/raw_data/Nome_Mets/Nome_daily.csv"
+fn1 <- "../raw_data/GHCND/Nome.csv"
 nome_sf <- get_nome_sf(fn1)
 
 fn2 <- "../Nome_Mets_aux/data/era5.Rds"
