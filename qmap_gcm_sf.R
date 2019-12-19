@@ -27,7 +27,7 @@ cm3h_adj <- cm3h_adj_lst$df
 cm3h_ecdf_lst <- list(
   obs = era5_tmin_adj$tmin_adj,
   sim = cm3h_adj$sim, 
-  sim_adj = cm3f_adj$sim_adj
+  sim_adj = cm3h_adj$sim_adj
 )
 cm3f_ecdf_lst <- list(
   obs = cm3h_adj$sim_adj,
@@ -51,7 +51,7 @@ ccsm4h_adj <- ccsm4h_adj_lst$df
 ccsm4h_ecdf_lst <- list(
   obs = era5_tmin_adj$tmin_adj,
   sim = ccsm4h_adj$sim, 
-  sim_adj = ccsm4f_adj$sim_adj
+  sim_adj = ccsm4h_adj$sim_adj
 )
 ccsm4f_ecdf_lst <- list(
   obs = ccsm4h_adj$sim_adj,
