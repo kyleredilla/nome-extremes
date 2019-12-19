@@ -102,7 +102,7 @@ ccsm4f_adj$date <- as.Date(rownames(wrf_t2min[[4]]))
 
 # plot/save ECDFs
 p1 <- ggECDF_compare(
-  cm3h_ecdf_lst$df, 
+  cm3h_ecdf_lst, 
   p_title = "Nome: CM3 -> ERA5"
 )
 p2 <- ggECDF_compare(
@@ -110,7 +110,7 @@ p2 <- ggECDF_compare(
   p_title = "Nome: CM3F to Adj CM3H"
 )
 p3 <- ggECDF_compare(
-  ccsm4h_ecdf_lst$df, 
+  ccsm4h_ecdf_lst, 
   p_title = "Nome: CCSM4 -> ERA5"
 )
 p4 <- ggECDF_compare(
