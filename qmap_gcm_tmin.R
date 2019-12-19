@@ -63,6 +63,7 @@ cm3f_adj_lst <- list(
   sim = cm3f_adj$sim, 
   sim_adj = cm3f_adj$sim_adj
 )
+
 # CCSM4
 ccsm4h_adj_lst <- qMap(
   # missing 2005-12-31 in WRF output, adjust accordingly
@@ -80,6 +81,12 @@ ccsm4f_adj_lst <- list(
   sim = ccsm4f_adj$sim, 
   sim_adj = ccsm4f_adj$sim_adj
 )
+
+# add dates both models
+cm3h_adj$date <- as.Date(rownames(wrf_t2min[[1]]))
+cm3f_adj$date <- as.Date(rownames(wrf_t2min[[2]]))
+ccsm4h_adj$date <- as.Date(rownames(wrf_t2min[[3]]))
+ccsm4f_adj$date <- as.Date(rownames(wrf_t2min[[4]]))
 
 # plot/save ECDFs
 p1 <- ggECDF_compare(cm3h_adj_lst$df, p_title = "Nome: CM3 -> ERA5")

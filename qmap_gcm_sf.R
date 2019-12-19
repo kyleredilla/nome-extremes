@@ -47,6 +47,12 @@ ccsm4f_adj_lst <- list(
   sim_adj = ccsm4f_adj$sim_adj
 )
 
+# add dates both models
+cm3h_adj$date <- wrf_sf[[1]]$date
+cm3f_adj$date <- wrf_sf[[2]]$date
+ccsm4h_adj$date <- wrf_sf[[3]]$date
+ccsm4f_adj$date <- wrf_sf[[4]]$date
+
 # plot/save ECDFs
 p1 <- ggECDF_compare(
   cm3h_adj_lst$df, 
