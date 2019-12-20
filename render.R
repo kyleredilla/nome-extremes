@@ -32,7 +32,7 @@ if (!(args[1] %in% valid_args)) {
   stop("Invalid argument", call. = FALSE)
 } 
 
-supressMessages(library(rmarkdown))
+suppressMessages(library(rmarkdown))
 
 doc_dir <- file.path("../Nome_Mets_aux/docs")
 
