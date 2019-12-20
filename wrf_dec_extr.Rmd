@@ -10,8 +10,10 @@ knitr::opts_knit(echo = FALSE)
 mk_df <- function(cm3, ccsm4) {
   mods <- c("CM3", "CCSM4")
   cm3 <- cm3 %>%
+    filter(date <= "2099-12-31") %>%
     mutate(gcm = factor("CM3", levels = mods))
   ccsm4 %>%
+    filter(date <= "2099-12-31") %>%
     mutate(gcm = factor("CCSM4", levels = mods)) %>%
     bind_rows %>%
     mutate(decade = as.factor(floor(year(date)/10) * 10))
@@ -20,13 +22,13 @@ mk_df <- function(cm3, ccsm4) {
 count_temps <- function(df, thr = -35) {
   df %>% 
     group_by(gcm, decade) %>%
-    summarise(days = sum(sim_adj <= thr))
+    summarise(days = sum(sim_adj <= thr, na.rm = TRUE))
 }
 
-count_sf <- function(df, thr) {
+count_sf <- function(df, thr = 0.18) {
   df %>% 
     group_by(gcm, decade) %>%
-    summarise(days = sum(sim_adj >= thr))
+    summarise(days = sum(sim_adj >= thr, na.rm = TRUE))
 }
 
 mk_barplot <- function(df) {
@@ -40,10 +42,18 @@ mk_barplot <- function(df) {
     theme_classic()
 }
 
-gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
-gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
+library(dplyr)
+library(ggplot2)
+library(lubridate)
 
-tmin_df <- mk_df(gcm_t2min[[2]], gcm_t2min[[4]])
+# run off server
+#gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
+#gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
+# run locally
+gcm_tmin <- readRDS("X:/Nome_Mets_aux/data/gcm_t2min_adj.Rds")
+gcm_sf <- readRDS("X:/Nome_Mets_aux/data/gcm_sf_adj.Rds")
+
+tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]])
 sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
 
 ```
