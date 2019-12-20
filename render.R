@@ -10,29 +10,32 @@
 
 
 #-- Setup ---------------------------------------------------------------------
-library(rmarkdown)
-
-doc_dir <- file.path("../Nome_Mets_aux/docs")
+wrap_render <- function(arg) {
+  fns <- switch(arg,
+    "1" = c("find_Nome.Rmd", "find_Nome"),
+    "2" = c("compare_dist.Rmd", "Nome_ERA5_distance"),
+    "3" = c("compare_extremes.Rmd", "Nome_ERA5_extremes"),
+    "4" = c("compare_sf.Rmd", "Nome_ERA5_sf_scaled"),
+    "5" = c("adj_wrf_tmin_ts.Rmd", "View_Adjusted_WRF_Tmin"),
+    "6" = c("wrf_dec_extr.Rmd", "WRF_proj_decade_summary")
+  )
+  render(fns[1], output_dir = doc_dir, output_file = fns[2])
+}
 
 #------------------------------------------------------------------------------
 
-#-- Render Files --------------------------------------------------------------
-# find_Nome.pdf
-render("find_Nome.Rmd", output_dir = doc_dir)
+#-- Main ----------------------------------------------------------------------
+args = commandArgs(trailingOnly = TRUE)
+valid_args <- as.character(1:6)
 
-# Nome_ERA5_distance.pdf
-render("compare_dist.Rmd", output_dir = doc_dir,
-       output_file = "Nome_ERA5_distance")
+if (!(args[1] %in% valid_args)) {
+  stop("Invalid argument", call. = FALSE)
+} 
 
-# Nome_ERA5_extremes.pdf
-render("compare_extremes.Rmd", output_dir = doc_dir,
-       output_file = "Nome_ERA5_extremes")
+supressMessages(library(rmarkdown))
 
-# Nome_ERA5_sf_scaled.pdf
-render("compare_sf.Rmd", output_dir = doc_dir,
-       output_file = "Nome_ERA5_sf_scaled")
+doc_dir <- file.path("../Nome_Mets_aux/docs")
 
-# View_Adjusted_WRF_Tmin.html
-render("adj_wrf_tmin_ts.Rmd", output_dir = doc_dir,
-       output_file = "View_Adjusted_WRF_Tmin")
+wrap_render(args[1])
+
 #------------------------------------------------------------------------------
