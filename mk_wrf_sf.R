@@ -24,11 +24,12 @@ K_to_F <- function(K) {
 }
 
 # calculate snowfall from df of temp/precip
+# (units in m)
 calc_sf <- function(df) {
   df %>%
     mutate(date = as.Date(ymd_hms(rownames(df)))) %>%
     group_by(date) %>%
-    summarise(sf = sum(pcpt[t2 <= 32]) * 7)
+    summarise(sf = sum(pcpt[t2 <= 32]) * 7 / 1000)
 }
 
 #------------------------------------------------------------------------------
