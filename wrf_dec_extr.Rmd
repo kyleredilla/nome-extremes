@@ -1,0 +1,67 @@
+---
+title: "Projected Daily Weather Extremes for Nome, AK"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit(echo = FALSE)
+
+# make df from results of both models
+mk_df <- function(cm3, ccsm4) {
+  mods <- c("CM3", "CCSM4")
+  cm3 <- cm3 %>%
+    mutate(gcm = factor("CM3", levels = mods))
+  ccsm4 %>%
+    mutate(gcm = factor("CCSM4", levels = mods)) %>%
+    bind_rows %>%
+    mutate(decade = as.factor(floor(year(date)/10) * 10))
+}
+
+count_temps <- function(df, thr = -35) {
+  df %>% 
+    group_by(gcm, decade) %>%
+    summarise(days = sum(sim_adj <= thr))
+}
+
+count_sf <- function(df, thr) {
+  df %>% 
+    group_by(gcm, decade) %>%
+    summarise(days = sum(sim_adj >= thr))
+}
+
+mk_barplot <- function(df) {
+  ggplot(df, aes(x = decade, y = days, fill = gcm)) + 
+    geom_bar(position = "dodge", stat = "identity") + 
+    geom_text(
+      aes(label = days), 
+      position = position_dodge(width = 0.9), 
+      vjust = -0.25
+    ) + 
+    theme_classic()
+}
+
+gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
+gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
+
+tmin_df <- mk_df(gcm_t2min[[2]], gcm_t2min[[4]])
+sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
+
+```
+
+# Extreme low temperatures
+
+```{r extreme_tmin} 
+tmin_df %>%
+  count_temps %>%
+  mk_barplot
+
+```
+
+# Extreme snowfall events
+
+```{r extreme_sf} 
+tmin_df %>%
+  count_sf %>%
+  mk_barplot
+
+```
