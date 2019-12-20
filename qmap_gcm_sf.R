@@ -68,19 +68,23 @@ ccsm4f_adj$date <- wrf_sf[[4]]$date
 # plot/save ECDFs
 p1 <- ggECDF_compare(
   cm3h_ecdf_lst, 
-  p_title = "Nome Snow: CM3 -> ERA5"
+  p_title = "Nome Snow: CM3 -> ERA5",
+  xmin = 0, var = "sf", xmax_adj = 0
 )
 p2 <- ggECDF_compare(
   cm3f_ecdf_lst, 
-  p_title = "Nome Snow: CM3F to Adj CM3H"
+  p_title = "Nome Snow: CM3F to Adj CM3H",
+  xmin = 0, var = "sf", xmax_adj = 0
 )
 p3 <- ggECDF_compare(
   ccsm4h_ecdf_lst, 
-  p_title = "Nome Snow: CCSM4 -> ERA5"
+  p_title = "Nome Snow: CCSM4 -> ERA5",
+  xmin = 0, var = "sf", xmax_adj = 0
 )
 p4 <- ggECDF_compare(
   ccsm4f_ecdf_lst, 
-  p_title = "Nome Snow: CCSM4F -> Adj CCSM4H"
+  p_title = "Nome Snow: CCSM4F -> Adj CCSM4H",
+  xmin = 0, var = "sf", xmax_adj = 0
 )
 
 # save ecdfs
