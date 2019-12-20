@@ -25,7 +25,7 @@ cm3f_adj <- qMap(
 cm3h_adj <- cm3h_adj_lst$df
 # lists for ecdf creation
 cm3h_ecdf_lst <- list(
-  obs = era5_tmin_adj$tmin_adj,
+  obs = era5_sf_adj$sf_adj,
   sim = cm3h_adj$sim, 
   sim_adj = cm3h_adj$sim_adj
 )
@@ -49,7 +49,7 @@ ccsm4f_adj <- qMap(
 ccsm4h_adj <- ccsm4h_adj_lst$df
 # lists for ecdfs
 ccsm4h_ecdf_lst <- list(
-  obs = era5_tmin_adj$tmin_adj,
+  obs = era5_sf_adj$sf_adj,
   sim = ccsm4h_adj$sim, 
   sim_adj = ccsm4h_adj$sim_adj
 )
