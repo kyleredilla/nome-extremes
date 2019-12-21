@@ -1,8 +1,6 @@
-# Download ERA5 output: 
-#   snowfall ,
-#   snow depth, 
-#   air temperature,
-#   wind speed
+# Download ERA5 wind output: 
+#   10 m wind u component,
+#   10 m wind v component, 
 # for nine grid cells around Nome using SLURM
 
 import cdsapi
@@ -48,7 +46,7 @@ def get_data(years):
             'area':[64.75, 194.25, 64.25, 194.75],
             'format':'netcdf'
         },
-        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_sf_sd_ta_Nome_sector_' + years[0] + '-' + years[-1] + '.nc')
+        '/workspace/UA/kmredilla/raw_data/ERA5/ERA5_10u_10v_Nome_sector_' + years[0] + '-' + years[-1] + '.nc')
 
 if __name__ == '__main__':
     import copy
@@ -68,7 +66,7 @@ if __name__ == '__main__':
     years = [[str(j) for j in i] for i in years]
     # add var names to year lists
     for i in range(10):
-            years[i].append(['snowfall', 'snow_depth', '2m_temperature'])
+            years[i].append(['10m_u_component_of_wind', '10m_v_component_of_wind'])
     # multiprocessing run
     pool = Pool()
     # get all data
