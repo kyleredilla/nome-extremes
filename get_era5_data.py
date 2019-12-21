@@ -1,5 +1,9 @@
-# Download ERA5 output of snowfall, snow depth, and air temperature for four grid cells around Nome using SLURM
-# full time span request too large, need to breakup into chunks
+# Download ERA5 output: 
+#   snowfall ,
+#   snow depth, 
+#   air temperature,
+#   wind speed
+# for nine grid cells around Nome using SLURM
 
 import cdsapi
 
