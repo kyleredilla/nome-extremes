@@ -10,34 +10,38 @@ knitr::opts_knit(echo = FALSE)
 mk_df <- function(cm3, ccsm4) {
   mods <- c("CM3", "CCSM4")
   cm3 <- cm3 %>%
-    filter(date <= "2099-12-31") %>%
     mutate(gcm = factor("CM3", levels = mods))
   ccsm4 %>%
-    filter(date <= "2099-12-31") %>%
     mutate(gcm = factor("CCSM4", levels = mods)) %>%
-    bind_rows %>%
+    bind_rows(cm3) %>%
+    filter(date >= "2020-01-01" & date <= "2099-01-01") %>%
     mutate(decade = as.factor(floor(year(date)/10) * 10))
 }
 
-count_temps <- function(df, thr = -35) {
+count_tmin <- function(df, thr = -35) {
   df %>% 
     group_by(gcm, decade) %>%
     summarise(days = sum(sim_adj <= thr, na.rm = TRUE))
 }
 
-count_sf <- function(df, thr = 0.18) {
+count_sf <- function(df, thr = 0.2) {
   df %>% 
     group_by(gcm, decade) %>%
     summarise(days = sum(sim_adj >= thr, na.rm = TRUE))
 }
 
 mk_barplot <- function(df) {
+  ylim <- ceiling(max(df$days)) + 2
   ggplot(df, aes(x = decade, y = days, fill = gcm)) + 
     geom_bar(position = "dodge", stat = "identity") + 
     geom_text(
       aes(label = days), 
       position = position_dodge(width = 0.9), 
       vjust = -0.25
+    ) + 
+    scale_y_continuous(
+      breaks = 0:ylim, 
+      expand = expand_scale(mult = c(0, .1))
     ) + 
     theme_classic()
 }
@@ -47,11 +51,11 @@ library(ggplot2)
 library(lubridate)
 
 # run off server
-#gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
-#gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
+gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
+gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
 # run locally
-gcm_tmin <- readRDS("X:/Nome_Mets_aux/data/gcm_t2min_adj.Rds")
-gcm_sf <- readRDS("X:/Nome_Mets_aux/data/gcm_sf_adj.Rds")
+#gcm_tmin <- readRDS("X:/Nome_Mets_aux/data/gcm_t2min_adj.Rds")
+#gcm_sf <- readRDS("X:/Nome_Mets_aux/data/gcm_sf_adj.Rds")
 
 tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]])
 sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
@@ -62,15 +66,15 @@ sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
 
 ```{r extreme_tmin} 
 tmin_df %>%
-  count_temps %>%
+  count_tmin %>%
   mk_barplot
 
 ```
 
 # Extreme snowfall events
-
+Days where snowfall exceeds 20 cm
 ```{r extreme_sf} 
-tmin_df %>%
+sf_df %>%
   count_sf %>%
   mk_barplot
 
