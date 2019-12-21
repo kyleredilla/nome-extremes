@@ -47,7 +47,7 @@ ecdf_lst <- list(
 )
 
 # ECDFs
-p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "sf", xmax_adj = 0)
+p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "ws", xmax_adj = 0)
 # save validation
 fn <- "../Nome_Mets_aux/figures/qmap/era5_ws_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
