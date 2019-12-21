@@ -18,7 +18,7 @@ mk_ncfns <- function() {
   suffix <- c("1979-1982", "1983-1986", "1987-1990", "1991-1994",
               "1995-1998", "1999-2002", "2003-2006", "2007-2010",
               "2011-2014", "2015-2018")
-  paste0("F:/raw_data/Nome_Mets/ERA5/ERA5_sf_sd_ta_Nome_sector_", suffix, ".nc")
+  paste0("../raw_data/ERA5/ERA5_sf_sd_ta_Nome_sector_", suffix, ".nc")
 }
 
 # extract data from netcdfs
@@ -75,7 +75,7 @@ prep_daily <- function() {
   bnames <- c("date", 
               "sf", "sf_attr", "sd", "sd_attr", 
               "tmin", "tmin_attr", "tmax", "tmax_attr")
-  nome <- fread("F:/raw_data/Nome_Mets/Nome_daily.csv", 
+  nome <- fread("../raw_data/GHCND/Nome.csv", 
                 select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
@@ -124,7 +124,7 @@ compute_dist <- function(sim, obs) {
 #   df with lon/lat and dists
 get_coords <- function(dists) {
   # get coords from an .nc file
-  nc <- nc_open("F:/raw_data/Nome_Mets/ERA5/ERA5_sf_sd_ta_Nome_sector_1979-1982.nc")
+  nc <- nc_open("../raw_data/ERA5/ERA5_sf_sd_ta_Nome_sector_1979-1982.nc")
   xc <- nc$dim$longitude$vals
   yc <- nc$dim$latitude$vals
   nc_close(nc)
@@ -146,7 +146,7 @@ get_coords <- function(dists) {
 
 plot_dists <- function() {
   # extract lon and lat from nc file and close
-  sf_path <- "F:/raw_data/Nome_Mets/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
+  sf_path <- "../raw_data/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
   sf <- nc_open(sf_path)
   xc <- ncvar_get(sf, varid = "longitude")
   yc <- ncvar_get(sf, varid = "latitude")
