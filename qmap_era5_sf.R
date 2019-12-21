@@ -15,10 +15,7 @@ get_nome_sf <- function(fn) {
   begin <- ymd("1979-01-01")
   end <- ymd("2018-12-31")
   nome[, ':=' (date = ymd(date),
-               year = year(date),
-               decade = year(date) - year(date) %% 10,
                sf = as.numeric(sf) / 1000)]
-  nome[, ym := format(date, "%Y-%m")]
   nome <- nome[date >= begin & date <= end, sf]
 }
 
