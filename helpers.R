@@ -1,5 +1,21 @@
 # Helper functions for analysis of Nome meteorological variables
 
+# Convert m/s components to mph and directions
+# borrowed from github/environmentalinformatics-marburg/Rsenal
+# take data.frame of uv components ("u10" and "v10") with datetime column
+uv2wdws <- function(uv) {
+  
+  degrees <- function(radians) 180 * radians / pi
+  
+  mathdegs <- degrees(atan2(uv$v10, uv$u10))
+  wdcalc <- ifelse(mathdegs > 0, mathdegs, mathdegs + 360)
+  wd <- ifelse(wdcalc < 270, 270 - wdcalc, 270 - wdcalc + 360)
+  ws <- sqrt(uv$u10^2 + uv$v10^2) * 2.23694
+  wdws <- as.data.frame(cbind(wd, ws))
+  wdws$ts <- uv$ts
+  wdws
+}
+
 # Custom quantile mapping function
 qMap <- function(obs = NULL, sim, 
                  ret.deltas = FALSE, 
