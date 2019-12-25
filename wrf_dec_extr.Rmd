@@ -1,46 +1,69 @@
 ---
-title: "Projected Daily Weather Extremes for Nome, AK"
+title: "Projected Weather Extremes for Nome, AK"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_knit(echo = FALSE)
+```{r setup, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 7, fig.height = 4)
 
 # make df from results of both models
 mk_df <- function(cm3, ccsm4) {
   mods <- c("CM3", "CCSM4")
   cm3 <- cm3 %>%
     mutate(gcm = factor("CM3", levels = mods))
-  ccsm4 %>%
+  test <- ccsm4 %>%
     mutate(gcm = factor("CCSM4", levels = mods)) %>%
     bind_rows(cm3) %>%
-    filter(date >= "2020-01-01" & date <= "2099-01-01") %>%
-    mutate(decade = as.factor(floor(year(date)/10) * 10))
+    filter(
+      {if("ts" %in% names(.)) ts else date} >= "2020-01-01" &
+      {if("ts" %in% names(.)) ts else date} <= "2099-01-01"
+    ) %>%
+    mutate(
+      decade = as.factor(
+        floor(
+          year({if("ts" %in% names(.)) ts else date})/10
+        ) * 10
+      )
+    )
 }
 
 count_tmin <- function(df, thr = -35) {
   df %>% 
     group_by(gcm, decade) %>%
-    summarise(days = sum(sim_adj <= thr, na.rm = TRUE))
+    summarise(count = sum(sim_adj <= thr, na.rm = TRUE))
 }
 
 count_sf <- function(df, thr = 0.2) {
   df %>% 
     group_by(gcm, decade) %>%
-    summarise(days = sum(sim_adj >= thr, na.rm = TRUE))
+    summarise(count = sum(sim_adj >= thr, na.rm = TRUE))
+}
+
+count_hwe <- function(df, thr = 30, d = 10) {
+  hws <- df %>% filter(sim_adj > thr)
+  dts <- as.numeric(diff(hws$ts))
+  hwe_id <- c(0, cumsum(dts > 2)) + 1
+  hwe_lst <- split(hwe_id, hwe_id)
+  hws$hrs <- unlist(lapply(hwe_lst, function(x) c(length(x), rep(0, length(x) - 1))))
+  hws$hwe <- hwe_id
+  hws %>%
+    filter(hrs > d) %>%
+    group_by(gcm, decade) %>%
+    summarise(count = n())
 }
 
 mk_barplot <- function(df) {
-  ylim <- ceiling(max(df$days)) + 2
-  ggplot(df, aes(x = decade, y = days, fill = gcm)) + 
+  ylim <- ceiling(max(df$count)) + 2
+  b <- round(ylim * 0.2)
+  ggplot(df, aes(x = decade, y = count, fill = gcm)) + 
     geom_bar(position = "dodge", stat = "identity") + 
     geom_text(
-      aes(label = days), 
+      aes(label = count), 
       position = position_dodge(width = 0.9), 
       vjust = -0.25
     ) + 
     scale_y_continuous(
-      breaks = 0:ylim, 
+      breaks = seq(0, ylim, by = b),
       expand = expand_scale(mult = c(0, .1))
     ) + 
     theme_classic()
@@ -53,16 +76,17 @@ library(lubridate)
 # run off server
 gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
 gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
-# run locally
-#gcm_tmin <- readRDS("X:/Nome_Mets_aux/data/gcm_t2min_adj.Rds")
-#gcm_sf <- readRDS("X:/Nome_Mets_aux/data/gcm_sf_adj.Rds")
+gcm_ws <- readRDS("../Nome_Mets_aux/data/gcm_ws_adj.Rds") 
 
 tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]])
 sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
+ws_df <- mk_df(gcm_ws[[2]], gcm_ws[[4]])
 
 ```
 
-# Extreme low temperatures
+## Cold days
+
+Days where $T_{min} \leq -35$ degrees F
 
 ```{r extreme_tmin} 
 tmin_df %>%
@@ -71,11 +95,23 @@ tmin_df %>%
 
 ```
 
-# Extreme snowfall events
-Days where snowfall exceeds 20 cm
+## Heavy snowfall days
+
+Days where snowfall $\geq 20$cm   
+
 ```{r extreme_sf} 
 sf_df %>%
   count_sf %>%
   mk_barplot
 
+```
+
+## High wind events
+
+Sustained winds of over 30 mph for $> 10$ hours (allowed for 2-hour dip below 30)  
+
+```{r hwe}
+ws_df %>%
+  count_hwe %>%
+  mk_barplot
 ```
