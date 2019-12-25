@@ -3,6 +3,13 @@
 #-- Functions -----------------------------------------------------------------
 # read hourly observed wind speeds
 get_nome_ws <- function(fn) {
+  # spike detection algo
+  # 1. calculate differences between each ws in ts
+  # 2. calculate corresponding time differences as separate vector
+  # 3. determine position(s) i of ws diffs x where x[i] > 30 and x[i + 1] > 30
+  # 4. if corresponding time changes at i and i + 1 are < 4 hours, 
+  #   add i + 1 to rm_vec
+  # 5. remove values
   # hourly wind speed data 
   vars <- c("valid", "sped")
   nome <- fread(fn, select = vars)
@@ -12,7 +19,13 @@ get_nome_ws <- function(fn) {
   nome[, ':=' (valid = paste0(valid, ":00"),
                sped = as.numeric(sped))]
   nome[, valid := ymd_hms(valid)]
-  nome <- nome[valid >= begin & valid <= end, sped]
+  nome <- nome[valid >= begin & valid <= end & sped < 80, ]
+  wsl <- list(ws = nome[, sped], ts = nome[, valid])
+  wsl <- lapply(wsl, function(x) abs(diff(x)))
+  i1 <- which(wsl$ws > 30)
+  i2 <- i1[(i1 + 1) %in% i1]
+  i_rm <- i2[wsl$ts[i2] < (4 * 3600) & wsl$ts[i2 + 1] < (4 * 3600)] + 1
+  nome[-i_rm, sped]
 }
 
 #------------------------------------------------------------------------------

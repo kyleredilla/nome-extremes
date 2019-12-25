@@ -2,7 +2,7 @@
 
 # Convert m/s components to mph and directions
 # borrowed from github/environmentalinformatics-marburg/Rsenal
-# take data.frame of uv components ("u10" and "v10") with datetime column
+# uv = data.frame of uv components ("u10" and "v10") with datetime column ("ts")
 uv2wdws <- function(uv) {
   
   degrees <- function(radians) 180 * radians / pi
