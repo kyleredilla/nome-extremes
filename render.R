@@ -34,7 +34,7 @@ if (!(args[1] %in% valid_args)) {
 
 suppressMessages(library(rmarkdown))
 
-doc_dir <- file.path("../Nome_Mets_aux/docs")
+doc_dir <- "../Nome_Mets_aux/docs"
 
 wrap_render(args[1])
 
