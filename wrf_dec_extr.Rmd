@@ -6,20 +6,26 @@ output: html_document
 ```{r setup, echo = FALSE, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.width = 7, fig.height = 4)
 
-# make df from results of both models
-mk_df <- function(cm3, ccsm4) {
-  mods <- c("CM3", "CCSM4")
+# make df from results of both GCMs and ERA
+mk_df <- function(cm3, ccsm4, era5) {
+  mods <- c("CM3", "CCSM4", "ERA5")
+  era5 <- era5 %>%
+    mutate(mod = factor("ERA5", levels = mods)) %>%
+    select(-c(names(.)[2]))
   cm3 <- cm3 %>%
-    mutate(gcm = factor("CM3", levels = mods))
-  test <- ccsm4 %>%
-    mutate(gcm = factor("CCSM4", levels = mods)) %>%
+    mutate(mod = factor("CM3", levels = mods))
+  ccsm4 %>%
+    mutate(mod = factor("CCSM4", levels = mods)) %>%
     bind_rows(cm3) %>%
     filter(
       {if("ts" %in% names(.)) ts else date} >= "2020-01-01" &
-      {if("ts" %in% names(.)) ts else date} <= "2099-01-01"
+      {if("ts" %in% names(.)) ts else date} <= "2099-12-31"
     ) %>%
+    select(names(.)[3], names(.)[2], names(.)[4]) %>%
+    bind_rows(era5) %>%
+    filter({if("ts" %in% names(.)) ts else date} >= "1980-01-01") %>%
     mutate(
-      decade = as.factor(
+      decade = factor(
         floor(
           year({if("ts" %in% names(.)) ts else date})/10
         ) * 10
@@ -27,45 +33,85 @@ mk_df <- function(cm3, ccsm4) {
     )
 }
 
-count_tmin <- function(df, thr = -35) {
-  df %>% 
-    group_by(gcm, decade) %>%
-    summarise(count = sum(sim_adj <= thr, na.rm = TRUE))
+# count obs surpassing threshold (for tmin and sf)
+count_thr <- function(df, thr = -30, leq = TRUE) {
+  new_lvls = c("CM3/CCSM4", "ERA5")
+  df <- df %>% 
+    group_by(mod, decade) %>%
+    summarise(count = sum(
+      {if(leq) sim_adj <= thr else sim_adj >= thr}, na.rm = TRUE)
+    ) %>%
+    ungroup
+  era5 <- df %>% 
+    filter(mod == "ERA5") %>%
+    mutate(mod = factor(mod, levels = new_lvls),
+           minc = 0, maxc = 0) %>%
+    rename(avc = count) %>%
+    select(decade, avc, minc, maxc, mod)
+  df %>%
+    filter(mod == "CM3" | mod == "CCSM4") %>%
+    group_by(decade) %>%
+    summarise(
+      avc = mean(count), 
+      minc = min(count), 
+      maxc = max(count)
+    ) %>%
+    mutate(mod = factor("CM3/CCSM4", levels = new_lvls)) %>%
+    bind_rows(era5)
 }
 
-count_sf <- function(df, thr = 0.2) {
-  df %>% 
-    group_by(gcm, decade) %>%
-    summarise(count = sum(sim_adj >= thr, na.rm = TRUE))
-}
-
+# count high wind events
 count_hwe <- function(df, thr = 30, d = 10) {
+  new_lvls = c("CM3/CCSM4", "ERA5")
   hws <- df %>% filter(sim_adj > thr)
   dts <- as.numeric(diff(hws$ts))
   hwe_id <- c(0, cumsum(dts > 2)) + 1
   hwe_lst <- split(hwe_id, hwe_id)
   hws$hrs <- unlist(lapply(hwe_lst, function(x) c(length(x), rep(0, length(x) - 1))))
   hws$hwe <- hwe_id
-  hws %>%
+  hws <- hws %>%
     filter(hrs > d) %>%
-    group_by(gcm, decade) %>%
-    summarise(count = n())
+    group_by(mod, decade) %>%
+    summarise(count = n()) %>%
+    ungroup
+  era5 <- hws %>% 
+    filter(mod == "ERA5") %>%
+    mutate(mod = factor(mod, levels = new_lvls),
+           minc = 0, maxc = 0) %>%
+    rename(avc = count) %>%
+    select(decade, avc, minc, maxc, mod)
+  hws %>%
+    filter(mod == "CM3" | mod == "CCSM4") %>%
+    group_by(decade) %>%
+    summarise(
+      avc = mean(count), 
+      minc = min(count), 
+      maxc = max(count)
+    ) %>%
+    mutate(mod = factor("CM3/CCSM4", levels = new_lvls)) %>%
+    bind_rows(era5)
 }
 
 mk_barplot <- function(df) {
-  ylim <- ceiling(max(df$count)) + 2
+  ylim <- ceiling(max(df$avc)) + 2
   b <- round(ylim * 0.2)
-  ggplot(df, aes(x = decade, y = count, fill = gcm)) + 
-    geom_bar(position = "dodge", stat = "identity") + 
-    geom_text(
-      aes(label = count), 
-      position = position_dodge(width = 0.9), 
-      vjust = -0.25
-    ) + 
+  ggplot(df, aes(x = decade, y = avc)) + 
+    geom_bar(aes(fill = mod), stat = "identity") + 
+    geom_errorbar(
+      aes(ymin = minc, ymax = maxc),
+      width = 0.2
+    ) +
+    geom_label(
+      aes(label = avc, group = mod),
+      vjust = -0.25, alpha = 1,
+      label.padding = unit(0.1, "lines"), 
+      label.size = NA
+    ) +
     scale_y_continuous(
       breaks = seq(0, ylim, by = b),
       expand = expand_scale(mult = c(0, .1))
     ) + 
+    ylab("Count") + xlab("Decade") + labs(fill = "Model") +
     theme_classic()
 }
 
@@ -78,19 +124,27 @@ gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
 gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
 gcm_ws <- readRDS("../Nome_Mets_aux/data/gcm_ws_adj.Rds") 
 
-tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]])
-sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]])
-ws_df <- mk_df(gcm_ws[[2]], gcm_ws[[4]])
+era_tmin_adj <- readRDS("../Nome_Mets_aux/data/era5_tmin_adj.Rds") %>%
+  rename(sim_adj = tmin_adj)
+era_sf_adj <- readRDS("../Nome_Mets_aux/data/era5_sf_adj.Rds") %>%
+  rename(sim_adj = sf_adj)
+era_ws_adj <- readRDS("../Nome_Mets_aux/data/era5_ws_adj.Rds") %>%
+  rename(sim_adj = ws_adj)
+
+
+tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]], era_tmin_adj)
+sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]], era_sf_adj)
+ws_df <- mk_df(gcm_ws[[2]], gcm_ws[[4]], era_ws_adj)
 
 ```
 
 ## Cold days
 
-Days where $T_{min} \leq -35$ degrees F
+Days where $T_{min} \leq -30$ degrees F
 
 ```{r extreme_tmin} 
 tmin_df %>%
-  count_tmin %>%
+  count_thr %>%
   mk_barplot
 
 ```
@@ -101,7 +155,7 @@ Days where snowfall $\geq 20$cm
 
 ```{r extreme_sf} 
 sf_df %>%
-  count_sf %>%
+  count_thr(thr = 0.2, leq = FALSE) %>%
   mk_barplot
 
 ```
