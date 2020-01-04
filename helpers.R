@@ -19,7 +19,8 @@ uv2wdws <- function(uv) {
 # Custom quantile mapping function
 qMap <- function(obs = NULL, sim, 
                  ret.deltas = FALSE, 
-                 use.deltas = NULL){
+                 use.deltas = NULL,
+                 zero_trunc = FALSE){
   
   if(is.null(use.deltas)){
     qn <- min(length(obs), length(sim))
@@ -54,7 +55,8 @@ qMap <- function(obs = NULL, sim,
   
   qi <- unlist(recycled)[order(order(qi))]
   sim_adj <- sim - as.numeric(q_deltas)[qi]
-  sim_adj[sim_adj < 0] <- 0
+  # truncate at zero if desired
+  if(zero_trunc) sim_adj[sim_adj < 0] <- 0
   
   df <- data.frame(sim = sim, sim_adj = sim_adj)
   
