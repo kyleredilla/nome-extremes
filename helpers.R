@@ -54,7 +54,8 @@ qMap <- function(obs = NULL, sim,
   
   qi <- unlist(recycled)[order(order(qi))]
   sim_adj <- sim - as.numeric(q_deltas)[qi]
-
+  sim_adj[sim_adj < 0] <- 0
+  
   df <- data.frame(sim = sim, sim_adj = sim_adj)
   
   # return adjusted
