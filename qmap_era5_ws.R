@@ -2,52 +2,50 @@
 
 #-- Functions -----------------------------------------------------------------
 # read hourly observed wind speeds
-get_nome_ws <- function(fn) {
-  # spike detection algo
-  # 1. calculate differences between each ws in ts
-  # 2. calculate corresponding time differences as separate vector
-  # 3. determine position(s) i of ws diffs x where x[i] > 30 and x[i + 1] > 30
-  # 4. if corresponding time changes at i and i + 1 are < 4 hours, 
-  #   add i + 1 to rm_vec
-  # 5. remove values
-  # hourly wind speed data 
-  vars <- c("valid", "sped")
-  nome <- fread(fn, select = vars)
-  begin <- ymd("1979-01-01")
-  end <- ymd("2018-12-31")
-  nome[sped == "M", sped := NA]
-  nome[, ':=' (valid = paste0(valid, ":00"),
-               sped = as.numeric(sped))]
-  nome[, valid := ymd_hms(valid)]
-  nome <- nome[valid >= begin & valid <= end & sped < 80, ]
-  wsl <- list(ws = nome[, sped], ts = nome[, valid])
-  wsl <- lapply(wsl, function(x) abs(diff(x)))
-  i1 <- which(wsl$ws > 30)
-  i2 <- i1[(i1 + 1) %in% i1]
-  i_rm <- i2[wsl$ts[i2] < (4 * 3600) & wsl$ts[i2 + 1] < (4 * 3600)] + 1
-  nome[-i_rm, sped]
+get_nome_ws <- function(fn, thr = 30) {
+  df <- read.csv(fn) %>%
+    rename(ts = valid) %>%
+    select(ts, sped) %>%
+    mutate(ts = ymd_hms(paste0(ts, ":00")))
+  df <- df[-(which(duplicated(df$ts))), ]
+  df$sped[df$sped == "M"] <- NA
+  df <- df %>%
+    mutate(sped = as.numeric(as.character(sped))) %>%
+    filter(sped < 80)
+  # remove spikes
+  dg <- which(diff(df$sped) > thr)
+  dl <- which(diff(df$sped) < -thr)
+  dts <- as.numeric(
+    difftime(df$ts[-1], df$ts[-(length(df$ts))], units = "hours")
+  )
+  dg_ts <- dts[dg[which((dl - 1) %in% dg)]] 
+  dl_ts <- dts[dg[which((dl - 1) %in% dg)] + 1] 
+  ri <- dg[dg_ts & dl_ts <= 2] + 1
+  df[-ri, ]
 }
 
 #------------------------------------------------------------------------------
 
 #-- Quantile Map ERA-Interim data ---------------------------------------------
-library(data.table)
+#library(data.table)
 library(dplyr)
 library(lubridate)
 
 source("helpers.R")
 
-fn1 <- "../raw_data/IEM/ASOS/PAOM_wind_19790101-20181231.txt"
+fn1 <- "../raw_data/IEM/ASOS/PAOM_wind_19800101-20200101.txt"
 nome_ws <- get_nome_ws(fn1)
 
 fn2 <- "../Nome_Mets_aux/data/era5_ws.Rds"
-era5_ws <- readRDS(fn2) %>% select(ts, ws)
+era5_ws <- readRDS(fn2) %>% 
+  select(ts, ws) %>%
+  filter(ts >= ymd("1980-01-01"))
 
-era5_ws_adj <- qMap(nome_ws, era5_ws$ws)
+era5_ws_adj <- qMap(nome_ws$sped, era5_ws$ws)
 era5_ws$ws_adj <- era5_ws_adj$sim_adj
 
 ecdf_lst <- list(
-  obs = nome_ws, 
+  obs = nome_ws$sped, 
   sim = era5_ws$ws,
   sim_adj = era5_ws$ws_adj
 )
@@ -60,6 +58,6 @@ ggsave(fn, p, width = 7, height = 4.5)
 
 # save adjusted ERA5 output
 fn <- "../Nome_Mets_aux/data/era5_ws_adj.Rds"
-saveRDS(era5_ws, fn)
+saveRDS(era5_ws, fn, compress = FALSE)
 
 #------------------------------------------------------------------------------
