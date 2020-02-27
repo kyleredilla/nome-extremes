@@ -35,8 +35,11 @@ Calibrate with observed data using quantile mapping.
 `render.R`: Render rmarkdown documents  
 `wrf_dec_extr.Rmd`: Visualize projections of extreme events
 
-### `data/`: project data (generated/intermediate)
+### `data/`
+project data (generated/intermediate)
 
-### `docs/`: documents (generated) and supporting info
+### `docs/`: 
+documents (generated) and supporting info
 
-### `figs/`: figures (generated)
+### `figs/`: 
+figures (generated)
