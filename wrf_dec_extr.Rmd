@@ -120,15 +120,15 @@ library(ggplot2)
 library(lubridate)
 
 # run off server
-gcm_tmin <- readRDS("../Nome_Mets_aux/data/gcm_t2min_adj.Rds")
-gcm_sf <- readRDS("../Nome_Mets_aux/data/gcm_sf_adj.Rds")
-gcm_ws <- readRDS("../Nome_Mets_aux/data/gcm_ws_adj.Rds") 
+gcm_tmin <- readRDS("data/gcm_t2min_adj.Rds")
+gcm_sf <- readRDS("data/gcm_sf_adj.Rds")
+gcm_ws <- readRDS("data/gcm_ws_adj.Rds") 
 
-era_tmin_adj <- readRDS("../Nome_Mets_aux/data/era5_tmin_adj.Rds") %>%
+era_tmin_adj <- readRDS("data/era5_tmin_adj.Rds") %>%
   rename(sim_adj = tmin_adj)
-era_sf_adj <- readRDS("../Nome_Mets_aux/data/era5_sf_adj.Rds") %>%
+era_sf_adj <- readRDS("data/era5_sf_adj.Rds") %>%
   rename(sim_adj = sf_adj)
-era_ws_adj <- readRDS("../Nome_Mets_aux/data/era5_ws_adj.Rds") %>%
+era_ws_adj <- readRDS("data/era5_ws_adj.Rds") %>%
   rename(sim_adj = ws_adj)
 
 

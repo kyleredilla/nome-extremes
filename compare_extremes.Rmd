@@ -30,7 +30,7 @@ prep_daily <- function() {
               "sf", "sf_attr", "sd", "sd_attr", 
               "tmin", "tmin_attr", "tmax", "tmax_attr", 
               "tavg", "tavg_attr")
-  fn <- "F:/raw_data/Nome_Mets/Nome_daily.csv"
+  fn <- "F:/data-raw/GHCND/Nome.csv"
   nome <- fread(fn, select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
@@ -149,7 +149,7 @@ add_coords <- function(df) {
 
 # make land sea mask df
 make_mask <- function() {
-  fn <- "F:/raw_data/Nome_Mets/ERA5_land_sea_mask_Nome_sector.nc"
+  fn <- "F:/data-raw/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
   nc <- nc_open(fn)
   lon <- ncvar_get(nc, "longitude")
   lat <- ncvar_get(nc, "latitude")

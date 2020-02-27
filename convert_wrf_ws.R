@@ -7,11 +7,11 @@ mk_args <- function() {
   split(cbind(rep(tf, each = 2), rep(tf, 2)), 1:4)
 }
 
-# generate filepaths for gcm tmin output
+# generate filepaths for gcm winds output
 # take bool vec for determining component, gcm, and period
-# args[1] TRUE = "u10", FALSE = "v10"
-# args[2] TRUE = "GFDL-CM3", FALSE = "NCAR-CCSM4"
-# args[3] TRUE = "historical", FALSE = "rcp85"
+# u10 TRUE = "u10", FALSE = "v10"
+# args[1] TRUE = "GFDL-CM3", FALSE = "NCAR-CCSM4"
+# args[2] TRUE = "historical", FALSE = "rcp85"
 mk_paths <- function(args, u10 = TRUE) {
   var_str <- if(u10) "u10" else "v10"
   gcm_str <- if(args[1]) "GFDL-CM3" else "NCAR-CCSM4"
@@ -23,7 +23,9 @@ mk_paths <- function(args, u10 = TRUE) {
     years <- 2006:2100
   }
   paste0(
-    "../raw_data/WRF/", var_str, "_hourly_wrf_", 
+    "../data-raw/WRF/hourly/", 
+    file.path(gcm_str, tf_str, var_str),
+    var_str, "_hourly_wrf_", 
     gcm_str, "_", tf_str, "_", years, ".nc"
   )
 }
@@ -72,7 +74,7 @@ t1 <- system.time(
 )
 cat(paste0("wind components converted, ", t1[3], " seconds\n"))
 
-fn_out <- "../Nome_Mets_aux/data/wrf_wdws.Rds"
+fn_out <- "data/wrf_wdws.Rds"
 saveRDS(wrf_wdws, fn_out)
 cat(paste0("winds saved as ", fn_out, "\n"))
 

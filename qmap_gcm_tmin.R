@@ -12,8 +12,8 @@ mk_paths <- function(gcm_period) {
     years <- 2006:2100
   }
   paste0(
-    "../raw_data/WRF/t2min_daily_wrf_", 
-    gcm_str, "_", tf_str, "_", years, ".nc"
+    "../data-raw/WRF/daily/", file.path(gcm_str, tf_str), 
+    "t2min/t2min_daily_wrf_", gcm_str, "_", tf_str, "_", years, ".nc"
   )
 }
 
@@ -41,7 +41,7 @@ nc_fns <- lapply(gcm_periods_lst, mk_paths)
 wrf_t2min_K <- lapply(nc_fns, wrf_get, nome_coords)
 wrf_t2min <- lapply(wrf_t2min_K, K_to_F)
 
-fn <- "../Nome_Mets_aux/data/era5_tmin_adj.Rds"
+fn <- "data/era5_tmin_adj.Rds"
 era5_tmin_adj <- readRDS(fn) %>%
   filter(date <= "2005-12-31")
 
@@ -122,10 +122,10 @@ p4 <- ggECDF_compare(
 
 # save ecdfs
 ecdf_fns <- c(
-  "../Nome_Mets_aux/figures/qmap/cm3_era5_tmin_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/cm3f_cm3h_tmin_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4_era5_tmin_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4f_ccsm4h_tmin_ecdfs.png"
+  "figs/qmap/cm3_era5_tmin_ecdfs.png",
+  "figs/qmap/cm3f_cm3h_tmin_ecdfs.png",
+  "figs/qmap/ccsm4_era5_tmin_ecdfs.png",
+  "figs/qmap/ccsm4f_ccsm4h_tmin_ecdfs.png"
 )
 ggsave(ecdf_fns[1], p1, width = 7, height = 4.5)
 ggsave(ecdf_fns[2], p2, width = 7, height = 4.5)
@@ -134,7 +134,7 @@ ggsave(ecdf_fns[4], p4, width = 7, height = 4.5)
 
 # save adjusted data
 
-fn <- "../Nome_Mets_aux/data/gcm_t2min_adj.Rds"
+fn <- "data/gcm_t2min_adj.Rds"
 saveRDS(tmin_lst, fn)
 
 #------------------------------------------------------------------------------

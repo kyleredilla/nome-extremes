@@ -3,7 +3,7 @@
 
 #-- Functions -----------------------------------------------------------------
 # make wrf filenames
-mk_wrf_fns <- function(gcm_period, var = "t2") {
+mk_wrf_fns <- function(gcm_period, var_str = "t2") {
   gcm_str <- if(gcm_period[1]) "GFDL-CM3" else "NCAR-CCSM4"
   if(gcm_period[2]) {
     tf_str <- "historical"
@@ -13,7 +13,9 @@ mk_wrf_fns <- function(gcm_period, var = "t2") {
     years <- 2006:2100
   }
   paste0(
-    "../raw_data/WRF/", var, "_hourly_wrf_", 
+    "../data-raw/WRF/daily", 
+    file.path(gcm_str, tf_str, var_str),
+    var_str, "_hourly_wrf_", 
     gcm_str, "_", tf_str, "_", years, ".nc"
   )
 }
@@ -64,7 +66,7 @@ for(i in 1:4){
 
 sf_lst <- lapply(wrf_lst, calc_sf)
 
-fn <- "../Nome_Mets_aux/data/nome_gcm_sf.Rds"
+fn <- "data/nome_gcm_sf.Rds"
 saveRDS(sf_lst, fn)
 
 #------------------------------------------------------------------------------

@@ -37,10 +37,10 @@ library(dplyr)
 
 source("helpers.R")
 
-fn1 <- "../raw_data/GHCND/Nome.csv"
+fn1 <- "../data-raw/GHCND/Nome.csv"
 nome_sf <- get_nome_sf(fn1)
 
-fn2 <- "../Nome_Mets_aux/data/era5.Rds"
+fn2 <- "data/era5.Rds"
 era5_sf <- get_era5_sf(fn2)
 
 era5_sf_adj <- qMap(nome_sf, era5_sf$sf)
@@ -55,11 +55,11 @@ ecdf_lst <- list(
 # ECDFs
 p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "sf", xmax_adj = 0)
 # save validation
-fn <- "../Nome_Mets_aux/figures/qmap/era5_sf_ecdfs.png"
+fn <- "figs/qmap/era5_sf_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
 
 # save adjusted ERA5 output
-fn <- "../Nome_Mets_aux/data/era5_sf_adj.Rds"
+fn <- "data/era5_sf_adj.Rds"
 saveRDS(era5_sf, fn)
 
 #------------------------------------------------------------------------------

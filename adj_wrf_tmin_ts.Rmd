@@ -35,10 +35,10 @@ library(dplyr)
 library(ggplot2)
 
 gcm_fns <- c(
-  "../Nome_Mets_aux/data/cm3h_t2min_adj.Rds",
-  "../Nome_Mets_aux/data/cm3f_t2min_adj.Rds",
-  "../Nome_Mets_aux/data/ccsm4h_t2min_adj.Rds",
-  "../Nome_Mets_aux/data/ccsm4f_t2min_adj.Rds"
+  "data/cm3h_t2min_adj.Rds",
+  "data/cm3f_t2min_adj.Rds",
+  "data/ccsm4h_t2min_adj.Rds",
+  "data/ccsm4f_t2min_adj.Rds"
 )
 
 gcm_tmin_adj <- lapply(gcm_fns, readRDS)

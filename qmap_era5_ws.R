@@ -33,10 +33,10 @@ library(lubridate)
 
 source("helpers.R")
 
-fn1 <- "../raw_data/IEM/ASOS/PAOM_wind_19800101-20200101.txt"
+fn1 <- "../data-raw/IEM/ASOS/PAOM_wind_19800101-20200101.txt"
 nome_ws <- get_nome_ws(fn1)
 
-fn2 <- "../Nome_Mets_aux/data/era5_ws.Rds"
+fn2 <- "data/era5_ws.Rds"
 era5_ws <- readRDS(fn2) %>% 
   select(ts, ws) %>%
   filter(ts >= ymd("1980-01-01"))
@@ -53,11 +53,11 @@ ecdf_lst <- list(
 # ECDFs
 p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "ws", xmax_adj = 0)
 # save validation
-fn <- "../Nome_Mets_aux/figures/qmap/era5_ws_ecdfs.png"
+fn <- "figs/qmap/era5_ws_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
 
 # save adjusted ERA5 output
-fn <- "../Nome_Mets_aux/data/era5_ws_adj.Rds"
+fn <- "data/era5_ws_adj.Rds"
 saveRDS(era5_ws, fn, compress = FALSE)
 
 #------------------------------------------------------------------------------

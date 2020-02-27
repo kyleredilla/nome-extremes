@@ -42,7 +42,7 @@ library(knitr)
 library(snaptools)
 
 # extract lon and lat from nc file and close
-era_lsm_path <- "../raw_data/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
+era_lsm_path <- "../data-raw/ERA5/ERA5_land_sea_mask_Nome_sector.nc"
 era_lsm_nc <- nc_open(era_lsm_path)
 era_lon <- ncvar_get(era_lsm_nc, varid = "longitude")
 era_lat <- ncvar_get(era_lsm_nc, varid = "latitude")
@@ -82,7 +82,7 @@ nei <- sei - 2
 
 bb <- data.frame(value = c(era_lat[nei], era_lon[wei], era_lat[sei], era_lon[eei]),
                  extent = c("north", "west", "south", "east"))
-write.csv(bb, "../Nome_Mets_aux/data/era5_Nome_bb.csv")
+write.csv(bb, "data/era5_Nome_bb.csv")
 
 ```
 

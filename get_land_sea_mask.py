@@ -16,7 +16,7 @@ def get_data():
             'area':[65, 194, 64, 195],
             'format':'netcdf'
         },
-        '/workspace/UA/kmredilla/Nome_Mets/data/ERA5_land_sea_mask_Nome_sector.nc')
+        '/workspace/UA/kmredilla/data-raw/ERA5/ERA5_land_sea_mask_Nome_sector.nc')
 
 if __name__ == '__main__':
     import copy

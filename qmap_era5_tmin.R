@@ -13,7 +13,7 @@ get_nome_tmin <- function() {
   vars <- c("DATE", "TMIN", "TMIN_ATTRIBUTES")
   # better rnames
   bnames <- c("date", "tmin", "tmin_attr")
-  fn <- "../raw_data/GHCND/Nome.csv"
+  fn <- "../data-raw/GHCND/Nome.csv"
   nome <- fread(fn, select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
@@ -30,7 +30,7 @@ get_nome_tmin <- function() {
 
 # get ERA5 data
 get_era5_tmin <- function() {
-  fn <- "../Nome_Mets_aux/data/era5.Rds"
+  fn <- "data/era5.Rds"
   readRDS(fn) %>%
     ungroup() %>%
     filter(ij == "1,2") %>%
@@ -61,11 +61,11 @@ ecdf_lst <- list(
 # ECDFs
 p <- ggECDF_compare(ecdf_lst)
 # save validation
-fn <- "../Nome_Mets_aux/figures/qmap/era5_tmin_ecdfs.png"
+fn <- "figs/qmap/era5_tmin_ecdfs.png"
 ggsave(fn, p, width = 7, height = 4.5)
 
 # save adjusted ERA5 output
-fn <- "../Nome_Mets_aux/data/era5_tmin_adj.Rds"
+fn <- "data/era5_tmin_adj.Rds"
 saveRDS(era5_tmin, fn)
 
 #------------------------------------------------------------------------------

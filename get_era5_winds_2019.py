@@ -48,4 +48,4 @@ c.retrieve(
         'area':[64.75, 194.25, 64.25, 194.75],
         'format': 'netcdf',
     },
-    '/workspace/UA/kmredilla/raw_data/ERA5/ERA5_10u_10v_Nome_sector_2019.nc')
+    '/workspace/UA/kmredilla/data-raw/ERA5/ERA5_10u_10v_Nome_sector_2019.nc')

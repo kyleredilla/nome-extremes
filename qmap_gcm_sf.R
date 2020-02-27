@@ -4,11 +4,11 @@
 library(dplyr)
 library(lubridate)
 
-fn <- "../Nome_Mets_aux/data/era5_sf_adj.Rds"
+fn <- "data/era5_sf_adj.Rds"
 era5_sf_adj <- readRDS(fn) %>%
   filter(date <= "2005-12-31")
 
-wrf_sf <- readRDS("../Nome_Mets_aux/data/nome_gcm_sf.Rds")
+wrf_sf <- readRDS("data/nome_gcm_sf.Rds")
 
 source("helpers.R")
 
@@ -91,10 +91,10 @@ p4 <- ggECDF_compare(
 
 # save ecdfs
 ecdf_fns <- c(
-  "../Nome_Mets_aux/figures/qmap/cm3_era5_sf_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/cm3f_cm3h_sf_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4_era5_sf_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4f_ccsm4h_sf_ecdfs.png"
+  "figs/qmap/cm3_era5_sf_ecdfs.png",
+  "figsfigures/qmap/cm3f_cm3h_sf_ecdfs.png",
+  "figs/qmap/ccsm4_era5_sf_ecdfs.png",
+  "figs/qmap/ccsm4f_ccsm4h_sf_ecdfs.png"
 )
 ggsave(ecdf_fns[1], p1, width = 7, height = 4.5)
 ggsave(ecdf_fns[2], p2, width = 7, height = 4.5)
@@ -102,7 +102,7 @@ ggsave(ecdf_fns[3], p3, width = 7, height = 4.5)
 ggsave(ecdf_fns[4], p4, width = 7, height = 4.5)
 
 # save adjusted data
-fn <- "../Nome_Mets_aux/data/gcm_sf_adj.Rds"
+fn <- "data/gcm_sf_adj.Rds"
 saveRDS(sf_lst, fn)
 
 #------------------------------------------------------------------------------

@@ -4,11 +4,11 @@
 library(dplyr)
 library(lubridate)
 
-fn <- "../Nome_Mets_aux/data/era5_ws_adj.Rds"
+fn <- "data/era5_ws_adj.Rds"
 era5_ws_adj <- readRDS(fn) %>%
   filter(ts < ymd("2006-01-01"))
 
-wrf_wdws <- readRDS("../Nome_Mets_aux/data/wrf_wdws.Rds")
+wrf_wdws <- readRDS("data/wrf_wdws.Rds")
 
 source("helpers.R")
 
@@ -90,10 +90,10 @@ p4 <- ggECDF_compare(
 
 # save ecdfs
 ecdf_fns <- c(
-  "../Nome_Mets_aux/figures/qmap/cm3_era5_ws_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/cm3f_cm3h_ws_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4_era5_ws_ecdfs.png",
-  "../Nome_Mets_aux/figures/qmap/ccsm4f_ccsm4h_ws_ecdfs.png"
+  "figs/qmap/cm3_era5_ws_ecdfs.png",
+  "figs/qmap/cm3f_cm3h_ws_ecdfs.png",
+  "figs/qmap/ccsm4_era5_ws_ecdfs.png",
+  "figs/qmap/ccsm4f_ccsm4h_ws_ecdfs.png"
 )
 ggsave(ecdf_fns[1], p1, width = 7, height = 4.5)
 ggsave(ecdf_fns[2], p2, width = 7, height = 4.5)
@@ -101,7 +101,7 @@ ggsave(ecdf_fns[3], p3, width = 7, height = 4.5)
 ggsave(ecdf_fns[4], p4, width = 7, height = 4.5)
 
 # save adjusted data
-fn <- "../Nome_Mets_aux/data/gcm_ws_adj.Rds"
+fn <- "data/gcm_ws_adj.Rds"
 saveRDS(ws_lst, fn)
 
 #------------------------------------------------------------------------------

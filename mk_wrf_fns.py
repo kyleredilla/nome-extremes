@@ -32,5 +32,5 @@ for model in models:
     	    fn2 = url2 + "{}_hourly_wrf_{}_rcp85_{}.nc\n"
     	    filenames += fn2.format(model, "rcp85", var, var, model, r)
 
-with open("../Nome_Mets_aux/data/wrf_filenames.txt", "w") as fh:
+with open("data/wrf_filenames.txt", "w") as fh:
   fh.write(filenames)

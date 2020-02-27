@@ -2,10 +2,10 @@
 #   Render RMarkdown files in the documents directory
 #
 # Output Files
-#   /documents/find_Nome.pdf
-#   /documents/Nome_ERA5_distance.pdf
-#   /documents/Nome_ERA5_extremes.pdf
-#   /documents/Nome_ERA5_sf_scaled.pdf
+#   docs/find_Nome.pdf
+#   docs/Nome_ERA5_distance.pdf
+#   docs/Nome_ERA5_extremes.pdf
+#   docs/Nome_ERA5_sf_scaled.pdf
 
 
 
@@ -34,7 +34,7 @@ if (!(args[1] %in% valid_args)) {
 
 suppressMessages(library(rmarkdown))
 
-doc_dir <- "../Nome_Mets_aux/docs"
+doc_dir <- "docs"
 
 wrap_render(args[1])
 

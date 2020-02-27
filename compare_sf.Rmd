@@ -24,7 +24,7 @@ prep_daily <- function() {
               "sf", "sf_attr", "sd", "sd_attr", 
               "tmin", "tmin_attr", "tmax", "tmax_attr", 
               "tavg", "tavg_attr")
-  fn <- "F:/raw_data/Nome_Mets/Nome_daily.csv"
+  fn <- "F:/data-raw/GHCND/Nome.csv"
   nome <- fread(fn, select = vars, col.names = bnames)
   
   # convert to correct type and units (m and C) and 
