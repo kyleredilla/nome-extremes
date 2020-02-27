@@ -1,0 +1,13 @@
+era5.Rds
+era5_sf_adj.Rds
+era5_tmin_adj.Rds
+era5_ws.Rds
+era5_ws_adj.Rds
+gcm_sf_adj.Rds
+gcm_t2min_adj.Rds
+gcm_ws_adj.Rds
+geo_em.d01.nc
+nome_gcm_sf.Rds
+wrf_era-interim_v10_fns.txt
+wrf_filenames.txt
+wrf_wdws.Rds
