@@ -1,5 +1,9 @@
 # `Nome_Mets/data`
 
+`impacts_by_month.csv`: number of impacts by month (created)
+`impacts_by_type.csv`: number of impacts by industry/sector type (created)
+`impacts_by_weather.csv`: number of impacts by weather type (created)
+`impacts_by_year.csv`: number of impacts by year (created)
 `era5.Rds`: ERA5 output (daily) for intersecting Nome cell and surrounding 8 cells
 `era5_sf_adj.Rds`: ERA5 daily snowfall at "Nome" cell, quantile-mapped and original
 `era5_t2min_adj.Rds`: ERA5 daily minimum temperature (2m) at "Nome" cell, quantile-mapped and original

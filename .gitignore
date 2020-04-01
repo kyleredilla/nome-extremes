@@ -4,7 +4,10 @@
 .Ruserdata
 scratch.R
 
+# any folder named archive
 **/archive
+# project files
+**/files
 
 # macos files
 ._*

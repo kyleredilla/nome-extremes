@@ -1,0 +1,13 @@
+weather_type,source,count
+Other,Nome Nugget,45
+Rain,Nome Nugget,18
+Sea ice,Nome Nugget,18
+Sea storm,Nome Nugget,47
+Snow,Nome Nugget,29
+Snowstorm,Nome Nugget,30
+Temperature,Nome Nugget,30
+Wind,Nome Nugget,14
+Coastal Flooding,Storm Data,12
+Wind,Storm Data,6
+Other ,Storm Data,6
+Snowstorm,Storm Data,10

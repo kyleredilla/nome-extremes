@@ -43,3 +43,6 @@ documents (generated) and supporting info
 
 ### `figs/`: 
 figures (generated)
+
+### `files/`:
+All other files related to the project not to be tracked by git. E.g. manuscripts, data, etc.

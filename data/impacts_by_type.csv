@@ -1,0 +1,17 @@
+type,subtype,source,count
+Activities,Mining,Nome Nugget,13
+Activities,Other,Nome Nugget,39
+Activities,Closures,Nome Nugget,24
+Activities,Subsistence,Nome Nugget,20
+Transportation,Air,Nome Nugget,34
+Transportation,Port,Nome Nugget,19
+Transportation,Roads,Nome Nugget,81
+Transportation,Trails,Nome Nugget,12
+Transportation,Transportation,Storm Data,16
+Utilities,Power,Nome Nugget,26
+Utilities,Water,Nome Nugget,17
+Utilities,Utilities,Storm Data,9
+Other,Bldg. structure,Nome Nugget,18
+Other,Other,Nome Nugget,19
+Other,Bldg. structure ,Storm Data,12
+Other,Other ,Storm Data,10
