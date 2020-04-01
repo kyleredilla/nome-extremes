@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 scratch.R
+
+**/archive
+
+# macos files
+._*
+.DS_Store
