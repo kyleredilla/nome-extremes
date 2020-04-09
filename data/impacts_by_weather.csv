@@ -8,6 +8,6 @@ Snowstorm,Nome Nugget,30
 Temperature,Nome Nugget,30
 Wind,Nome Nugget,14
 Coastal Flooding,Storm Data,12
-Wind,Storm Data,6
-Other ,Storm Data,6
-Snowstorm,Storm Data,10
+ Wind ,Storm Data,6
+ Other ,Storm Data,6
+ Snowstorm ,Storm Data,10
