@@ -538,6 +538,7 @@ mk_fig5 <- function(fp) {
       legend.margin = margin(t = 0)
     ) + 
     coord_cartesian(ylim = c(0, 30), clip = "off")
+  return(p)
 }
 
 p5 <- mk_fig5("data/impacts_by_year.csv")
@@ -548,46 +549,37 @@ saveEPS("figs/manuscript/Fig5.eps", p5)
 #-- Figure 6 ------------------------------------------------------------------
 # Extreme event decadal frequencies for historical (ERA5/Observed) and
 #   future (GCMs)
+mk_fig6 <- function(fp) {
+  df <- readRDS("data/extr_bar_df.Rds")
+  cols <- c("darkolivegreen3", ggsci::pal_jco("default")(4)[c(1, 4)])
+  mk_tex <- function(string) latex2exp::TeX(string)
+  
+  p <- ggplot(df, aes(x = decade, y = avc)) + 
+    geom_bar(aes(fill = mod), stat = "identity", position = "dodge") + 
+    scale_fill_manual(values = cols) +  
+    geom_errorbar(
+      aes(ymin = minc, ymax = maxc, alpha = if_else(minc == maxc, 0, 1)),
+      width = 0.2
+    ) +
+    scale_y_continuous(expand = expand_scale(mult = c(0, .2))) + 
+    scale_x_discrete(breaks = as.character(seq(1980, 2100, 10))) + 
+    ylab("Count") + xlab("Decade") + labs(fill = "Source") +
+    theme_classic() + 
+    facet_wrap(~as.factor(varname), nrow = 1, scales = "free_y",
+               labeller = as_labeller(mk_tex, default = label_parsed)) + 
+    theme(strip.background = element_blank(),
+          strip.text = element_text("serif", color = "black", size = 11,
+                                    margin = margin(b = 0, t = 0)),
+          panel.border = element_rect(color = "black", fill = NA),
+          axis.text = element_text("serif", color = "black"),
+          axis.title = element_text(family = "serif"),
+          legend.text = element_text("serif"),
+          legend.title = element_text("serif")) + 
+    guides(alpha = FALSE)
+}
 
-gcm_tmin <- readRDS("data/gcm_t2min_adj.Rds")
-gcm_sf <- readRDS("data/gcm_sf_adj.Rds")
-gcm_ws <- readRDS("data/gcm_ws_adj.Rds") 
-
-# ignore data from prior to 1990
-era_tmin_adj <- readRDS("data/era5_tmin_adj.Rds") %>%
-  filter(date >= "1990-01-01") %>%
-  rename(sim_adj = tmin_adj)
-era_sf_adj <- readRDS("data/era5_sf_adj.Rds") %>%
-  filter(date >= "1990-01-01") %>%
-  rename(sim_adj = sf_adj)
-era_ws_adj <- readRDS("data/era5_ws_adj.Rds") %>%
-  filter(ts >= ymd("1990-01-01")) %>%
-  rename(sim_adj = ws_adj)
-
-# daily observations
-fn <- "../data-raw/GHCND/Nome_snow_tmin_19800101-20191231.csv"
-obs_lst <- get_nome_daily(fn)
-
-# hourly observations (wind)
-fn <- "../data-raw/IEM/ASOS/PAOM_wind_19800101-20200101.txt"
-obs_lst$ws <- get_nome_ws(fn)
-
-tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]], era_tmin_adj, obs_lst$tmin)
-sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]], era_sf_adj, obs_lst$sf)
-ws_df <- mk_df(gcm_ws[[2]], gcm_ws[[4]], era_ws_adj, obs_lst$ws)
-
-# make plots and save
-# bar_df <- mk_bar_df(tmin_df, sf_df, ws_df)
-# p1 <- mk_barplot(bar_df)
-# #fn1 <- "figs/manuscript/figure_1_ERA5.png"
-# fn1 <- "figs/manuscript/figure_1.png"
-# ggsave(fn1, p1, width = 6, height = 8)
-
-# make alternative figure 1, side by side
-bar_df <- mk_bar_df(tmin_df, sf_df, ws_df)
-p1_1 <- mk_barplot(bar_df, nrows = 1)
-fn1_1 <- "figs/manuscript/figure_3.png"
-ggsave(fn1_1, p1_1, width = 13.92, height = 4)
+p6 <- mk_fig6("data/extr_bar_df.csv")
+saveEPS("figs/manuscript/Fig6.eps", p6)
 
 #------------------------------------------------------------------------------
 
