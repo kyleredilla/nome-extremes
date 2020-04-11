@@ -241,41 +241,66 @@ mk_barplot <- function(df, nrows = 3) {
 
 #------------------------------------------------------------------------------
 
-
-
 #-- Figure 1 ------------------------------------------------------------------
 # figure 1 - map of Alaska with Nome labelled
-library(tyidyverse)
-library(ggmap)
-library(gridExtra)
-
-map <- get_googlemap(c(lon = -150, lat = 64.5011), zoom = 3, maptype = "satellite")
-
-p <- ggmap(map) + 
-  scale_x_continuous(
-    limits = c(-190, -110),
-    breaks = c(-175, -150, -125),
-    labels = c("175°W", "150°W", "125°W")
-  ) +
-  scale_y_continuous(
-    limits = c(50, 75), 
-    labels = paste0(as.character(seq(50, 75, 5)), "°N")
-  ) +
-  geom_point(aes(x = -165.4064, y = 64.5011,  colour = "darkred"), size = 2) +
-  geom_text(
-    aes(-165.4064, y = 64.5011, label = "Nome"), 
-    color = "white", size = 5, nudge_x = 3.5, nudge_y = 0.75, family = "serif"
-  ) +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_text(family = "serif", size = 8),
-    panel.border = element_rect(colour = "grey", fill=NA, size=2),
-    legend.position = "none"
+mk_fig1 <- function(fp) {
+  map <- get_stamenmap(
+    bbox = c(left = -180, bottom = 50, right = -125, top = 73), zoom = 4,
+    maptype = "terrain-background", color = "bw", messaging = FALSE
   )
+  
+  attrs <- attr(map, "bb")    # save attributes from original
+  map[map == "#AEAEAE"] <- "#FFFFFF"
+  # correct class, attributes
+  class(map) <- c("ggmap", "raster")
+  attr(map, "bb") <- attrs
+  
+  # label: Bering Sea, Chukchi Sea, Beaufort Sea
+  labs_df <- data.frame(
+    lon = c(-172, -171, -140),
+    lat = c(57, 71, 72),
+    text = c("Bering Sea", "Chukchi Sea", "Beaufort Sea")
+  )
+  
+  ggmap(map) + 
+    scale_x_continuous(
+      breaks = seq(-180, -130, 10),
+      labels = paste0(as.character(seq(-180, -130, 10)), "°W"), 
+      expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+      breaks = seq(50, 70, 5),
+      labels = paste0(as.character(seq(50, 70, 5)), "°N"),
+      expand = c(0, 0)
+    ) +
+    geom_point(aes(x = -165.4064, y = 64.5011), color = "black", size = 2) +
+    geom_label(
+      aes(-165.4064, 64.5011, label = "Nome"), 
+      color = "black", size = 4, nudge_x = 1.25, nudge_y = 0.65, family = "serif",
+      alpha = 0.5, label.padding = unit(0.15, "lines"), label.size = 0, label.r = unit(0.2, "lines")
+    ) +
+    geom_text(
+      data = labs_df,
+      aes(label = text), 
+      family = "serif", fontface = "italic",
+      color = "gray25", size = 4
+    ) +
+    theme(
+      axis.title = element_blank(),
+      axis.text = element_text(family = "serif", size = 8),
+      panel.border = element_rect(colour = "grey", fill=NA, size=2),
+      legend.position = "none"
+    )
+}
+
+library(ggmap)
+
+# attribution: Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL.
+p1 <- mk_fig1(fp)
 
 ggsave(
-  "figs/manuscript/Fig1.png", 
-  p, width = 174, height = 174 * (800/1080), units = mm
+  "figs/manuscript/Fig1.tiff", 
+  p, width = 174, height = 174 * 0.9, units = "mm"
 )
 
 # code attempting to use better projection for AK
@@ -316,34 +341,10 @@ ggsave(
 # read and prep frequency by type data
 # Note: these data are modified to make desired plot achieved more easily
 #   within R
-extrafont::font_import()
-
-fig2_theme <- theme(
-  axis.ticks = element_blank(),
-  axis.text = element_text(color = "black", family = "serif", size = 11),
-  axis.text.x = element_text(
-    angle = 40,
-    margin = margin(t = 1, b = 5),
-    hjust = 0.9
-  ),
-  axis.title.x = element_blank(),
-  axis.title.y = element_text(family = "serif", size = 14),
-  plot.title = element_text(hjust = -0.1, family = "serif", size = 16),
-  legend.position = "bottom",
-  legend.title = element_blank(),
-  legend.text = element_text(family = "serif", size = 12),
-  legend.key.size = unit(0.7,"line"),
-  panel.grid.minor.y = element_blank(),
-  panel.grid.major.x = element_blank(),
-  panel.border = element_blank(),
-  panel.spacing = unit(2, "lines"),
-  legend.margin = margin(0, -2, 0, -2)
-)
-
 mk_fig2 <- function(fp) {
   freq_type <- read_csv(fp, col_types = "fffd", trim_ws = FALSE)
   # set ymin for annotations
-  ann_ymin <- -30
+  ann_ymin <- -25
   p <- ggplot(freq_type, aes(x = subtype, y = count)) + 
     geom_bar(
       aes(fill = source), color = "black", size = 0.4, width = 0.4,
@@ -360,73 +361,117 @@ mk_fig2 <- function(fp) {
     fig2_theme +
     # add custom annotations for 
     annotation_custom(
-      textGrob("Activities", gp = gpar(fontsize = 13, fontfamily = "serif")),
+      textGrob("Activities", gp = gpar(fontsize = 13)),
       xmin = 2.5, xmax = 2.5, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      textGrob("Transportation", gp = gpar(fontsize = 13, fontfamily = "serif")),
+      textGrob("Transportation", gp = gpar(fontsize = 13)),
       xmin = 9, xmax = 9, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      textGrob("Utilities", gp = gpar(fontsize = 13, fontfamily = "serif")),
+      textGrob("Utilities", gp = gpar(fontsize = 13)),
       xmin = 15, xmax = 15, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      textGrob("Other", gp = gpar(fontsize = 13, fontfamily = "serif")),
+      textGrob("Other", gp = gpar(fontsize = 13)),
       xmin = 20.5, xmax = 20.5, ymin = ann_ymin, ymax = ann_ymin
     ) +
     coord_cartesian(ylim = c(0, 90), clip = "off")
 }
 
-p2 <- mk_fig2("data/impacts_by_type.csv")
-ggsave(
-  "figs/manuscript/Fig2.eps", device = "eps",
-  width = 174, height = 174 * (500 / 800), units = "mm"
+# save figure as .eps 
+saveEPS <- function(fp, p, width = 6.85, hr = 0.625) {
+  postscript(
+    fp, 
+    width = width, height = width * hr,
+    family = "Times New Roman", 
+    # these args used to make true EPS output
+    paper = "special", onefile = FALSE, horizontal = FALSE
+  )
+  suppressWarnings(print(p))
+  dev.off()
+  # embed fonts in saved figure
+  # need to have ghostscript installed
+  embed_fonts(fp, options = "-dEPSCrop")
+}
+
+suppressMessages({
+  library(tidyverse)
+  library(grid)
+  library(gridExtra)
+  library(extrafont)
+})
+
+# theme for figure 2
+# serves as base theme for figs 3-5
+fig2_theme <- theme(
+  axis.ticks = element_blank(),
+  axis.text = element_text(color = "black", size = 11),
+  axis.text.x = element_text(
+    angle = 40,
+    margin = margin(t = 1, b = 5),
+    hjust = 0.9
+  ),
+  axis.title.x = element_blank(),
+  axis.title.y = element_text(size = 13, margin = margin(r = 7)),
+  legend.position = "bottom",
+  legend.title = element_blank(),
+  legend.text = element_text(size = 12),
+  legend.key.size = unit(0.7,"line"),
+  panel.grid.minor.y = element_blank(),
+  panel.grid.major.x = element_blank(),
+  panel.border = element_blank(),
+  panel.spacing = unit(2, "lines"),
+  legend.margin = margin(0, -2, 0, -2)
 )
 
-fnt <- extrafont::fonts();i <- grep("serif", fnt, ignore.case = TRUE);fnt[i]
+p2 <- mk_fig2("data/impacts_by_type.csv")
+# load fonts once per session
+loadfonts(device = "postscript", quiet = TRUE)
+saveEPS("figs/manuscript/Fig2.eps", p2)
 
 #------------------------------------------------------------------------------
 
 #-- Figure 3 ------------------------------------------------------------------
 # Impact frequencies by month
+mk_fig3 <- function(fp) {
+  freq_mo <- read_csv(fp, col_types = "ffd")
+  freq_mo[freq_mo == 0] <- NA
+  p2 <- ggplot(freq_mo, aes(x = month, y = count, group = source)) + 
+    geom_bar(
+      aes(fill = source), color = "black", size = 0.4, width = 0.4,
+      stat = "identity", 
+      position = position_dodge(0.5)
+    ) + 
+    scale_fill_manual(values = c("black", "white")) +
+    scale_y_continuous(
+      breaks = seq(0, 50, 10), 
+      limits = c(0, 50),
+      expand = c(0, 0)
+    ) +
+    ylab("Frequency") + 
+    theme_bw() +
+    fig2_theme +
+    theme(
+      axis.text.x = element_text(
+        angle = 0, hjust = 0.5,
+        margin = margin(t = 1, b = -3)
+      ),
+      legend.key.size = unit(0.7,"line")
+    )
+}
 
-base_theme2 <- theme(
-  axis.ticks = element_blank(),
-  axis.text = element_text(color = "black", family = "serif", size = 12),
-  axis.text.x = element_text(margin = margin(t = 5, b = -3)),
-  axis.title.x = element_blank(),
-  axis.title.y = element_text(family = "serif", size = 14),
-  plot.title = element_text(hjust = -0.1, family = "serif", size = 16),
-  legend.position = "bottom",
-  legend.title = element_blank(),
-  legend.text = element_text(family = "serif", size = 11),
-  panel.grid.minor.y = element_blank(),
-  panel.border = element_blank(),
-  legend.margin = margin(-2, -2, -2, -2)
-)
-freq_mo <- read_csv("data/impacts_by_month.csv", col_types = "ffd")
+p3 <- mk_fig3("data/impacts_by_month.csv")
+saveEPS("figs/manuscript/Fig3.eps", p3)
 
 #------------------------------------------------------------------------------
 
 #-- Figure 4 ------------------------------------------------------------------
 # Impact frequencies by weather type
+# Note: these data are modified to make desired plot achieved more easily
+#   within R
 mk_fig4 <- function(fp) {
-  # read and prep weather data for barplot
-  freq_wthr <- read_csv(fp, col_types = "cfd", trim_ws = FALSE)
-  # being lazy and just hardcoding this one, watch out for data changes
-  freq_wthr <- bind_rows(
-    freq_wthr[1:8, ],
-    data.frame(
-      weather_type = c("", " "),
-      source = factor(rep("Nome Nugget", 2), levels = levels(freq_wthr$source)),
-      count = rep(NA, 2),
-      stringsAsFactors = FALSE
-    ),
-    freq_wthr[9:12, ]
-  ) %>%
-  mutate(weather_type = factor(weather_type, weather_type))
-  # make plot
+  freq_wthr <- read_csv(fp, col_types = "ffd", trim_ws = FALSE)
   p <- ggplot(freq_wthr, aes(x = weather_type, y = count)) + 
     geom_bar(
       aes(fill = source), color = "black", size = 0.4, width = 0.4,
@@ -434,42 +479,42 @@ mk_fig4 <- function(fp) {
     ) + 
     scale_fill_manual(values = c("black", "white")) +
     scale_y_continuous(
-      breaks = seq(0, 50, 12.5), 
-      labels = c("0", "12.5", "25", "37.5", "50"),
+      breaks = seq(0, 50, 10), 
       limits = c(0, 50),
       expand = c(0, 0)
     ) +
     ylab("Frequency") + 
-    ggtitle("B") + 
     theme_bw() +
-    fig3_theme +
+    fig2_theme +
     theme(
-      axis.text.x = element_text(margin = margin(b = -3)),
+      axis.text.x = element_text(margin = margin(t = 4, b = -5)),
+      axis.text.y = element_text(margin = margin(r = 3)),
       legend.key.size = unit(0.7,"line"),
-      panel.grid.major.x = element_blank()
+      legend.box.margin = margin(t = -2)
     )
   return(p)
 }
 
 p4 <- mk_fig4("data/impacts_by_weather.csv")
-ggsave("figs/manuscript/Fig5.eps", p4)
+saveEPS("figs/manuscript/Fig4.eps", p4)
 
 #------------------------------------------------------------------------------
 
 #-- Figure 5 ------------------------------------------------------------------
 # Impact frequencies by year
 mk_fig5 <- function(fp) {
-  freq_yr <- read_csv(fp, col_types = "ffd")
+  freq_yr <- read_csv(fp, col_types = "dfd")
   p <- ggplot(freq_yr, aes(x = year, y = count, group = source)) + 
     geom_line() +
     geom_point(aes(shape = source, fill = source), size = 3) + 
     geom_smooth(
       data = subset(freq_yr, source == "Nome Nugget"),
       aes(year, count),
+      formula = "y ~ x",
       method = lm, se = FALSE, color = "black", lty = 3, lwd = 0.5
     ) + 
     scale_shape_manual(values = c(21, 22)) +
-    scale_fill_manual(values = fill_colors) + 
+    scale_fill_manual(values = c("black", "white")) + 
     scale_x_continuous(
       breaks = seq(1990, 2018, 4),
       minor_breaks = seq(1990, 2018),
@@ -477,161 +522,32 @@ mk_fig5 <- function(fp) {
       expand = c(0, 0)
     ) +
     scale_y_continuous(
-      breaks = seq(0, 30, 7.5), 
-      labels = c("0", "7.5", "15", "22.5", "30"),
+      breaks = seq(0, 30, 10), 
       limits = c(0, 30),
       expand = c(0, 0)
     ) +
     ylab("Frequency") + 
-    ggtitle("A") +
     theme_bw() +
     fig2_theme + 
     theme(
-      plot.margin = margin(3, 15, 0, 2),
-      legend.spacing.x = unit(1, "pt")
-    )
+      axis.text.x = element_text(
+        angle = 0, margin = margin(t = 6), hjust = 0.5),
+      panel.grid.major.x = element_line(color = "gray92"),
+      plot.margin = margin(5, 15, 4, 2),
+      legend.spacing.x = unit(1, "pt"),
+      legend.margin = margin(t = 0)
+    ) + 
+    coord_cartesian(ylim = c(0, 30), clip = "off")
 }
 
 p5 <- mk_fig5("data/impacts_by_year.csv")
-ggsave("figs/manuscript/Fig5.eps", p5)
+saveEPS("figs/manuscript/Fig5.eps", p5)
 
 #------------------------------------------------------------------------------
 
-
-mk_fig2 <- function(freq_yr, freq_mo, color = FALSE) {
-  fig2_theme <- theme(
-    axis.ticks = element_blank(),
-    axis.text = element_text(color = "black", family = "serif", size = 12),
-    axis.text.x = element_text(margin = margin(t = 5, b = -3)),
-    axis.title.x = element_blank(),
-    axis.title.y = element_text(family = "serif", size = 14),
-    plot.title = element_text(hjust = -0.1, family = "serif", size = 16),
-    legend.position = "bottom",
-    legend.title = element_blank(),
-    legend.text = element_text(family = "serif", size = 11),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_blank(),
-    legend.margin = margin(-2, -2, -2, -2)
-  )
-  
-  fill_colors <- if(color) c("#1C45A6", "#EB6F64") else c("black", "white")
-  bar_colors <- if(color) c("#399cbd", "#bd5a39") else c("black", "black")
-
- 
-  freq_mo[freq_mo == 0] <- NA
-  p2 <- ggplot(freq_mo, aes(x = month, y = count, group = source)) + 
-    geom_bar(
-      aes(color = source, fill = source), size = 0.4, width = 0.4,
-      stat = "identity", 
-      position = position_dodge(0.5)
-    ) + 
-    scale_fill_manual(values = fill_colors) +
-    scale_color_manual(values = bar_colors) +
-    scale_y_continuous(
-      breaks = seq(0, 50, 12.5), 
-      labels = c("0", "12.5", "25", "37.5", "50"),
-      limits = c(0, 50),
-      expand = c(0, 0)
-    ) +
-    ylab("Frequency") + 
-    ggtitle("B") + 
-    theme_bw() +
-    fig2_theme +
-    theme(
-      axis.text.x = element_text(margin = margin(t = 1, b = -3)),
-      legend.key.size = unit(0.7,"line"),
-      panel.grid.major.x = element_blank(),
-    )
-  
-  # done to avoid clipping points
-  gt <- ggplot_gtable(ggplot_build(p1))
-  gt$layout$clip[gt$layout$name=="panel"] <- "off"
-  p <- arrangeGrob(gt, p2, nrow = 2)
-  return(p)
-}
-
-freq_yr <- read_csv("data/impacts_by_year.csv", col_types = "dfd")
-freq_mo <- read_csv("data/impacts_by_month.csv", col_types = "ffd")
-
-p2 <- mk_fig2(freq_yr, freq_mo)
-p2c <- mk_fig2(freq_yr, freq_mo, TRUE)
-
-fig2_fp <- "figs/manuscript/figure_2.png"
-fig2c_fp <- "figs/manuscript/figure_2_color.png"
-ggsave(fig2_fp, p2, width = 6, height = 7.5)
-ggsave(fig2c_fp, p2c, width = 6, height = 7.5)
-
-#------------------------------------------------------------------------------
-
-#-- Figure 3 ------------------------------------------------------------------
-# Impact frequencies by intudstry and weather types
-
-
-
-
-# make figure 3
-mk_fig3 <- function(freq_type, freq_wthr, color = FALSE) {
-  fig3_theme <- theme(
-    axis.ticks = element_blank(),
-    axis.text = element_text(color = "black", family = "serif", size = 11),
-    axis.text.x = element_text(
-      angle = 40,
-      margin = margin(t = 1, b = 5),
-      hjust = 0.9
-    ),
-    axis.title.x = element_blank(),
-    axis.title.y = element_text(family = "serif", size = 14),
-    plot.title = element_text(hjust = -0.1, family = "serif", size = 16),
-    legend.position = "bottom",
-    legend.title = element_blank(),
-    legend.text = element_text(family = "serif", size = 12),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_blank(),
-    legend.margin = margin(0, -2, 0, -2)
-  )
-  
-  fill_colors <- if(color) c("#1C45A6", "#EB6F64") else c("black", "white")
-  bar_colors <- if(color) c("#399cbd", "#bd5a39") else c("black", "black")
-  
-  
-  gt <- ggplot_gtable(ggplot_build(p1))
-  leg_idx <- which(sapply(gt$grobs, function(x) x$name) == "guide-box")
-  legend <- gt$grobs[[leg_idx]]
-  
-  p <- arrangeGrob(
-    arrangeGrob(
-      p1 + theme(legend.position = "none"),
-      p2 + theme(legend.position = "none"), 
-      nrow = 2, heights = c(5, 5)
-    ), legend, nrow = 2, heights = c(40, 2)
-  )
-  
-  return(p)
-}
-
-library(grid)
-library(gridExtra)
-
-freq_type_fp <- "data/impacts_by_type.csv"
-freq_wthr_fp <- "data/impacts_by_weather.csv"
-
-freq_type <- read_freq_type(freq_type_fp)
-freq_wthr <- read_freq_wthr(freq_wthr_fp)
-
-p3 <- mk_fig3(freq_type, freq_wthr)
-p3c <- mk_fig3(freq_type, freq_wthr, TRUE)
-
-fig3_fp <- "figs/manuscript/figure_3.png"
-fig3c_fp <- "figs/manuscript/figure_3_color.png"
-ggsave(fig3_fp, p3, width = 6, height = 7.5)
-ggsave(fig3c_fp, p3c, width = 6, height = 7.5)
-
-#------------------------------------------------------------------------------
-
-#-- Figure 4 ------------------------------------------------------------------
+#-- Figure 6 ------------------------------------------------------------------
 # Extreme event decadal frequencies for historical (ERA5/Observed) and
 #   future (GCMs)
-
 
 gcm_tmin <- readRDS("data/gcm_t2min_adj.Rds")
 gcm_sf <- readRDS("data/gcm_sf_adj.Rds")
@@ -848,3 +764,5 @@ p2 <- mk_bar_df_yr(tmin_df_yr, sf_df_yr, ws_df_yr) %>%
 #fn1 <- "figs/manuscript/figure_1_ERA5.png"
 fn2 <- "figs/manuscript/extr_events_by_year.png"
 ggsave(fn2, p2, width = 6, height = 8)
+
+#------------------------------------------------------------------------------

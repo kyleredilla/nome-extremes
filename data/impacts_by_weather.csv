@@ -7,6 +7,8 @@ Snow,Nome Nugget,29
 Snowstorm,Nome Nugget,30
 Temperature,Nome Nugget,30
 Wind,Nome Nugget,14
+" ",Nome Nugget,NA
+"  ",Storm Data,NA
 Coastal Flooding,Storm Data,12
  Wind ,Storm Data,6
  Other ,Storm Data,6
