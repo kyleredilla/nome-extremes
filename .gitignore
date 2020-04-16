@@ -8,6 +8,8 @@ scratch.R
 **/archive
 # project files
 **/files
+# figures
+**/figs
 
 # macos files
 ._*
