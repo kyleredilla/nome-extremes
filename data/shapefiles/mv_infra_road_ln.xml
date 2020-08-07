@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MetadataType xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://www.fgdc.gov/schemas/metadata/fgdc-std-001-1998.xsd">
+    <idinfo>
+        <citation>
+            <citeinfo>
+                <origin>Alaska Department of Natural Resources - Information Resource Management</origin>
+                <pubdate>20200806</pubdate>
+                <title>Alaska Roads 1:63,360</title>
+                <geoform>vector digital data</geoform>
+                <onlink>http://asgdc.alaska.gov#182</onlink>
+            </citeinfo>
+        </citation>
+        <descript>
+            <abstract>This data depicts road locations in Alaska as digitized
+primarily from 1:24,000, 1:63,360, and 1:250,000 USGS quadrangles.
+
+The source document that represented the newest information and best
+geographic location was used to capture the data.  All infrastructure
+from the primary source document was digitized and then supplemented
+with the information from other source documents for additional or updated
+infrastructure or attributes.</abstract>
+            <purpose>The Alaska Infrastructure 1:63,360 data set was created for representation on the
+State status plats.</purpose>
+            <supplinf>Standard Map Depiction:
+An ArcGIS layer file, downloadable at http://asgdc.alaska.gov#182, is available for use in creating a standard map rendition.</supplinf>
+        </descript>
+        <timeperd>
+            <timeinfo>
+                <sngdate>
+                    <caldate>20200806</caldate>
+                </sngdate>
+            </timeinfo>
+            <current>Date of data extraction</current>
+        </timeperd>
+        <status>
+            <progress>Complete</progress>
+            <update>daily</update>
+        </status>
+        <spdom/>
+        <keywords>
+            <theme>
+                <themekt>ISO 19115 Topic Category</themekt>
+                <themekey>transportation</themekey>
+                <themekey>utilitiesCommunication</themekey>
+            </theme>
+            <theme>
+                <themekt>none</themekt>
+                <themekey>infrastructure</themekey>
+                <themekey>roads</themekey>
+                <themekey>logging roads</themekey>
+                <themekey>forestry development roads</themekey>
+                <themekey>transportation</themekey>
+            </theme>
+            <place>
+                <placekt>none</placekt>
+                <placekey>Alaska</placekey>
+            </place>
+        </keywords>
+        <accconst>none</accconst>
+        <useconst>Any hardcopies or published datasets utilizing these data sets shall clearly indicate their source.
+If the user has modified the data in any way they are obligated to describe the types of modifications
+they have performed. User specifically agrees not to misrepresent these data sets, nor to imply that
+changes they made were approved by the Alaska Department of Natural Resources.</useconst>
+        <ptcontac>
+            <cntinfo>
+                <cntperp>
+                    <cntper>GIS Public Access Coordinator</cntper>
+                    <cntorg>AK Department of Natural Resources - Information Resource Management</cntorg>
+                </cntperp>
+                <cntpos>GIS Public Access Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing and physical address</addrtype>
+                    <address>550 W. 7th Suite 706</address>
+                    <city>Anchorage</city>
+                    <state>AK</state>
+                    <postal>99501</postal>
+                    <country>USA</country>
+                </cntaddr>
+                <cntvoice>907 269 8060</cntvoice>
+                <cntfax>907 269 8920</cntfax>
+                <cntemail>dnr.gispub@alaska.gov</cntemail>
+                <hours>800-1600 AST</hours>
+                <cntinst>See Distribution_Information</cntinst>
+            </cntinfo>
+        </ptcontac>
+        <datacred>USGS, ADNR</datacred>
+    </idinfo>
+    <dataqual>
+        <attracc>
+            <attraccr>The attribute information was verified for accuracy against the
+source document using tools developed for the project.</attraccr>
+        </attracc>
+        <logic>unknown</logic>
+        <complete>All quadrangles were reviewed, and if infrastructure existed, infrastructure
+was captured.</complete>
+        <posacc>
+            <horizpa>
+                <horizpar>Check plots were produced at the source document scale and overlaid
+onto a light table to check for accuracy against the source document.</horizpar>
+            </horizpa>
+        </posacc>
+        <lineage>
+            <procstep>
+                <procdesc>ArcGIS feature classes updated by SGU cartographers.</procdesc>
+                <procdate>unknown</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntperp>
+                            <cntper>GIS Public Access Coordinator</cntper>
+                            <cntorg>AK Department of Natural Resources - Information Resource Management</cntorg>
+                        </cntperp>
+                        <cntpos>SGU Manager</cntpos>
+                        <cntaddr>
+                            <addrtype>mailing and physical address</addrtype>
+                            <address>550 W. 7th Suite 706</address>
+                            <city>Anchorage</city>
+                            <state>AK</state>
+                            <postal>99501</postal>
+                            <country>USA</country>
+                        </cntaddr>
+                        <cntvoice>907 269 8060</cntvoice>
+                        <cntfax>907 269 8920</cntfax>
+                        <cntemail>dnr.gispub@alaska.gov</cntemail>
+                        <hours>0800-1600</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Feature class data copied to materialized view.</procdesc>
+                <procdate>unknown</procdate>
+            </procstep>
+            <procstep>
+                <procdesc>Materialized view data extracted and converted to Shape format.</procdesc>
+                <procdate>unknown</procdate>
+            </procstep>
+        </lineage>
+    </dataqual>
+    <spdoinfo>
+        <direct>Vector</direct>
+        <ptvctinf>
+            <sdtsterm>
+                <sdtstype>String</sdtstype>
+                <ptvctcnt>44242</ptvctcnt>
+            </sdtsterm>
+        </ptvctinf>
+    </spdoinfo>
+    <spref>
+        <horizsys>
+            <planar>
+                <mapproj>
+                    <mapprojn>Albers Conical Equal Area</mapprojn>
+                    <albers>
+                        <stdparll>55.0</stdparll>
+                        <stdparll>65.0</stdparll>
+                        <longcm>-154.0</longcm>
+                        <latprjo>50.0</latprjo>
+                        <feast>0.0</feast>
+                        <fnorth>0.0</fnorth>
+                    </albers>
+                </mapproj>
+                <planci>
+                    <plance>coordinate pair</plance>
+                    <coordrep>
+                        <absres>1.0E-4</absres>
+                        <ordres>1.0E-4</ordres>
+                    </coordrep>
+                    <plandu>meters</plandu>
+                </planci>
+            </planar>
+            <geodetic>
+                <horizdn>North American Datum of 1983</horizdn>
+                <ellips>Geodetic Reference System 80</ellips>
+                <semiaxis>6378137.0</semiaxis>
+                <denflat>298.257222</denflat>
+            </geodetic>
+        </horizsys>
+    </spref>
+    <eainfo>
+        <detailed>
+            <enttyp>
+                <enttypl>INFRA_ROAD</enttypl>
+                <enttypd>Feature class</enttypd>
+                <enttypds>ESRI</enttypds>
+            </enttyp>
+            <attr>
+                <attrlabl>FID</attrlabl>
+                <attrdef>Internal feature number.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                    <udom>Sequential unique whole numbers that are automatically generated.</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>Shape</attrlabl>
+                <attrdef>Feature geometry.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                    <udom>Coordinates defining the features.</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>SOURCE</attrlabl>
+                <attrdef>Source document identifier</attrdef>
+                <attrdefs>ADNR</attrdefs>
+                <attrdomv>
+                    <udom>text field</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>NAME</attrlabl>
+                <attrdef>Feature name</attrdef>
+                <attrdefs>ADNR</attrdefs>
+                <attrdomv>
+                    <udom>text field</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>SCALE</attrlabl>
+                <attrdef>Scale of source document</attrdef>
+                <attrdefs>ADNR</attrdefs>
+                <attrdomv>
+                    <udom>text field</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>SOURCEDATE</attrlabl>
+                <attrdef>Source document revision date</attrdef>
+                <attrdefs>ADNR</attrdefs>
+                <attrdomv>
+                    <udom>date field</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>DISPLAY</attrlabl>
+                <attrdef>Code used to define map display.</attrdef>
+                <attrdefs>ADNR</attrdefs>
+                <attrdomv>
+                    <edom>
+                        <edomv>C</edomv>
+                        <edomvd>Cartographic edit.</edomvd>
+                        <edomvds>ADNR</edomvds>
+                    </edom>
+                </attrdomv>
+                <attrdomv>
+                    <edom>
+                        <edomv>N</edomv>
+                        <edomvd>No map display.</edomvd>
+                        <edomvds>ADNR</edomvds>
+                    </edom>
+                </attrdomv>
+                <attrdomv>
+                    <edom>
+                        <edomv>Y</edomv>
+                        <edomvd>Display on map.</edomvd>
+                        <edomvds>ADNR</edomvds>
+                    </edom>
+                </attrdomv>
+            </attr>
+        </detailed>
+    </eainfo>
+    <distinfo>
+        <distrib>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>Alaska Department of Natural Resources - Information Resource Management</cntorg>
+                </cntorgp>
+                <cntpos>GIS Public Access Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing and physical address</addrtype>
+                    <address>550 W. 7th Suite 706</address>
+                    <city>Anchorage</city>
+                    <state>AK</state>
+                    <postal>99501</postal>
+                    <country>USA</country>
+                </cntaddr>
+                <cntvoice>907 269 8060</cntvoice>
+                <cntfax>907 269 8920</cntfax>
+            </cntinfo>
+        </distrib>
+        <resdesc>Downloadable Data</resdesc>
+        <distliab>The State of Alaska makes no express or implied warranties (including warranties of merchantability
+and fitness) with respect to the character, function, or capabilities of the electronic services
+or products or their appropriateness for any users purposes. In no event will the State of Alaska
+be liable for any incidental, indirect, special, consequential or other damages suffered by the
+user or any other person or entity whether from the use of the electronic services or products,
+any failure thereof or otherwise, and in no event will the State of Alaska s liability to the
+requestor or anyone else exceed the fee paid for the electronic service or product.</distliab>
+        <stdorder>
+            <digform>
+                <digtinfo>
+                    <formname>zipped shape file</formname>
+                </digtinfo>
+                <digtopt>
+                    <onlinopt>
+                        <computer>
+                            <networka>
+<networkr>http://asgdc.alaska.gov#182</networkr>
+                            </networka>
+                        </computer>
+                    </onlinopt>
+                </digtopt>
+            </digform>
+            <fees>none</fees>
+        </stdorder>
+    </distinfo>
+    <metainfo>
+        <metd>20080204</metd>
+        <metc>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>AK Department of Natural Resources - Information Resource Management</cntorg>
+                </cntorgp>
+                <cntpos>GIS Public Access Coordinator</cntpos>
+                <cntaddr>
+                    <addrtype>mailing and physical address</addrtype>
+                    <address>550 W. 7th Suite 706</address>
+                    <city>Anchorage</city>
+                    <state>AK</state>
+                    <postal>99501</postal>
+                    <country>USA</country>
+                </cntaddr>
+                <cntvoice>907 269 8060</cntvoice>
+                <cntfax>907 269 8920</cntfax>
+                <cntemail>dnr.gispub@alaska.gov</cntemail>
+                <hours>800-1600 AST</hours>
+            </cntinfo>
+        </metc>
+        <metstdn>FGDC Content Standards for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+        <metuc>If the user has modified the data in any way they are obligated
+to describe the types of modifications they have performed in the
+supporting metadata file.  User specifically agrees not to imply
+that changes they made were approved by the Alaska Department of
+Natural Resources.</metuc>
+        <metextns>
+            <onlink>http://www.esri.com/metadata/esriprof80.html</onlink>
+            <metprof>ESRI Metadata Profile</metprof>
+        </metextns>
+    </metainfo>
+</MetadataType>
