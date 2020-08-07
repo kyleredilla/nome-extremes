@@ -12,48 +12,82 @@
 #-- Figure 1 ------------------------------------------------------------------
 # figure 1 - map of Alaska with Nome labelled
 mk_fig1 <- function(fp) {
+  # get tiles
+  # seward peninsula
+  bb <- c(-169.1, 63.4, -161.7, 66.1)
   map <- get_stamenmap(
-    bbox = c(left = -180, bottom = 50, right = -125, top = 73), zoom = 4,
+    bbox = bb, zoom = 8,
+    maptype = "terrain-background", color = "bw", messaging = FALSE
+  )
+  # AK
+  ak_map <- get_stamenmap(
+    bbox = c(left = -173.5, bottom = 56, right = -135, top = 71.5), zoom = 5,
     maptype = "terrain-background", color = "bw", messaging = FALSE
   )
   
+  # change gray ocean to white
   attrs <- attr(map, "bb")    # save attributes from original
+  ak_attrs <- attr(ak_map, "bb")
   map[map == "#AEAEAE"] <- "#FFFFFF"
+  ak_map[ak_map == "#AEAEAE"] <- "#FFFFFF"
   # correct class, attributes
   class(map) <- c("ggmap", "raster")
   attr(map, "bb") <- attrs
   
-  # label: Bering Sea, Chukchi Sea, Beaufort Sea
-  labs_df <- data.frame(
-    lon = c(-172, -171, -140),
-    lat = c(57, 71, 72),
-    text = c("Bering Sea", "Chukchi Sea", "Beaufort Sea")
-  )
-
+  # secondary AK roads shapefile from http://www.asgdc.state.ak.us/#182
+  minor_sp <- readOGR("data/shapefiles/mv_infra_road_ln.shp")
+  # filter to area around Nome
+  minor <- fortify(spTransform(minor_sp, CRS("+init=epsg:4326"))) %>%
+    filter(long < -164.4 & long > -165.8 & lat > bb[2] & lat < 64.8)
+  
+  # Keep labels: Bering Sea, Chukchi Sea, Beaufort Sea
+  # labs_df <- data.frame(
+  #   lon = c(-172, -171, -140),
+  #   lat = c(57, 71, 72),
+  #   text = c("Bering Sea", "Chukchi Sea", "Beaufort Sea")
+  # )
+  # 
+  p_ak <- ggmap(ak_map) + 
+    geom_point(aes(x = -165.4064, y = 64.5011), color = "black", size = 2) +
+    theme(
+      axis.title = element_blank(), 
+      axis.text  = element_blank(),
+      axis.ticks = element_blank(),
+      plot.margin = unit(c(1,1,0.3,0.3), "mm")
+    )
+  
+  xbreaks <- seq(-169, -161, 2)
+  ybreaks <- seq(64, 66, 1)
   p <- ggmap(map) + 
+    geom_path(
+      aes(x = long, y = lat, group = group), 
+      data = minor, colour ='gray40', size = .6
+    ) + 
+    inset(
+      ggplotGrob(p_ak), xmin = bb[1] + 0.15, xmax = -166.5, ymin = bb[2], ymax = 64.53
+    ) +
     scale_x_continuous(
-      breaks = seq(-180, -130, 10),
-      labels = paste0(as.character(seq(-180, -130, 10)), "°W"), 
+      breaks = xbreaks,
+      labels = paste0(as.character(abs(xbreaks)), "°W"), 
       expand = c(0, 0)
     ) +
     scale_y_continuous(
-      breaks = seq(50, 70, 5),
-      labels = paste0(as.character(seq(50, 70, 5)), "°N"),
+      breaks = ybreaks,
+      labels = paste0(as.character(ybreaks), "°N"),
       expand = c(0, 0)
     ) +
-    geom_point(aes(x = -165.4064, y = 64.5011), color = "black", size = 2) +
-    geom_label(
-      aes(-165.4064, 64.5011, label = "Nome"), 
-      color = "black", size = 4, nudge_x = 1.25, nudge_y = 0.65, family = "serif",
-      alpha = 0.5, label.padding = unit(0.15, "lines"), 
-      label.size = 0, label.r = unit(0.2, "lines")
-    ) +
     geom_text(
-      data = labs_df,
-      aes(label = text), 
-      family = "serif", fontface = "italic",
-      color = "gray25", size = 4
+      aes(-165.4064, 64.5011, label = "Nome"), 
+      color = "black", size = 4, nudge_x = -0.2, nudge_y = -0.05, family = "serif"
+      # alpha = 0.5, label.padding = unit(0.15, "lines"), 
+      # label.size = 0, label.r = unit(0.2, "lines")
     ) +
+    # geom_text(
+    #   data = labs_df,
+    #   aes(label = text), 
+    #   family = "serif", fontface = "italic",
+    #   color = "gray25", size = 4
+    # ) +
     theme(
       axis.title = element_blank(),
       axis.text = element_text(family = "serif", size = 8),
@@ -64,6 +98,12 @@ mk_fig1 <- function(fp) {
 
 suppressMessages({
   library(ggmap)
+  library(rgdal)
+  library(dplyr)
+  library(grid)
+  #library(maptools)
+  #library(sp)
+  
 })
 
 # attribution: Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL.
@@ -97,7 +137,7 @@ mk_fig2 <- function(fp) {
       expand = c(0, 0)
     ) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 18)) + 
-    ylab("Frequency") + 
+    ylab("Count") + 
     theme_bw() +
     fig2_theme +
     # add custom annotations for "Public and Municipal Closures"
@@ -199,7 +239,7 @@ mk_fig3 <- function(fp) {
       limits = c(0, 50),
       expand = c(0, 0)
     ) +
-    ylab("Frequency") + 
+    ylab("Count") + 
     theme_bw() +
     fig2_theme +
     theme(
@@ -233,7 +273,7 @@ mk_fig4 <- function(fp) {
       limits = c(0, 50),
       expand = c(0, 0)
     ) +
-    ylab("Frequency") + 
+    ylab("Count") + 
     theme_bw() +
     fig2_theme +
     theme(
@@ -276,7 +316,7 @@ mk_fig5 <- function(fp) {
       limits = c(0, 30),
       expand = c(0, 0)
     ) +
-    ylab("Frequency") + 
+    ylab("Count") + 
     theme_bw() +
     fig2_theme + 
     theme(
