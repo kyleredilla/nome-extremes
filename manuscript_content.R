@@ -11,7 +11,7 @@
 
 #-- Figure 1 ------------------------------------------------------------------
 # figure 1 - map of Alaska with Nome labelled
-mk_fig1 <- function(fp) {
+mk_fig1 <- function() {
   # get tiles
   # seward peninsula
   bb <- c(-169.1, 63.4, -161.7, 66.1)
@@ -32,7 +32,10 @@ mk_fig1 <- function(fp) {
   ak_map[ak_map == "#AEAEAE"] <- "#FFFFFF"
   # correct class, attributes
   class(map) <- c("ggmap", "raster")
+  class(ak_map) <- c("ggmap", "raster")
   attr(map, "bb") <- attrs
+  attr(ak_map, "bb") <- ak_attrs
+  
   
   # secondary AK roads shapefile from http://www.asgdc.state.ak.us/#182
   minor_sp <- readOGR("data/shapefiles/mv_infra_road_ln.shp")
@@ -53,7 +56,8 @@ mk_fig1 <- function(fp) {
       axis.title = element_blank(), 
       axis.text  = element_blank(),
       axis.ticks = element_blank(),
-      plot.margin = unit(c(1,1,0.3,0.3), "mm")
+      plot.margin = unit(c(1,1,0.3,0.3), "mm"),
+      panel.border = element_rect(colour = "black", fill=NA, size=1)
     )
   
   xbreaks <- seq(-169, -161, 2)
@@ -91,7 +95,7 @@ mk_fig1 <- function(fp) {
     theme(
       axis.title = element_blank(),
       axis.text = element_text(family = "serif", size = 8),
-      panel.border = element_rect(colour = "grey", fill=NA, size=2),
+      panel.border = element_rect(colour = "black", fill=NA, size=2),
       legend.position = "none"
     )
 }
@@ -107,10 +111,12 @@ suppressMessages({
 })
 
 # attribution: Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL.
-p1 <- mk_fig1(fp)
 
+p1 <- mk_fig1()
+out_dir <- file.path(Sys.getenv("FILES_DIR"), "manuscript-figures")
+dir.create(out_dir, showWarnings = FALSE)
 ggsave(
-  "figs/manuscript/Fig1.tiff", 
+  file.path(out_dir, "Fig1.tiff"),
   p, width = 174, height = 174 * 0.9, units = "mm"
 )
 
@@ -124,12 +130,16 @@ ggsave(
 mk_fig2 <- function(fp) {
   freq_type <- read_csv(fp, col_types = "fffd", trim_ws = FALSE)
   # set ymin for annotations
-  ann_ymin <- -38
-  p <- ggplot(freq_type, aes(x = subtype, y = count)) + 
-    geom_bar(
-      aes(fill = source), color = "black", size = 0.4, width = 0.4,
-      stat = "identity"
-    ) + 
+  ann_ymin <- -50
+  p <- ggplot(freq_type, aes(x = subtype, y = count, fill = source)) + 
+    geom_col(
+      color = "black", width = 0.8,
+      position = position_dodge2(preserve = "single", padding = 0.2)
+    ) +
+    # geom_bar(
+    #   aes(fill = source), color = "black", size = 0.4, width = 0.4,
+    #   stat = "identity", position = "dodge"
+    # ) + 
     scale_fill_manual(values = c("black", "white")) +
     scale_y_continuous(
       breaks = seq(0, 90, 15), 
@@ -146,24 +156,49 @@ mk_fig2 <- function(fp) {
       ggpubr::text_grob("Public and Municipal\nClosures", 
         size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
       ),
-      xmax = 0.65, ymax = -65
+      xmax = 17, ymax = -69
+    ) +
+    annotation_custom(
+      # using text_grob here bc found solution to adjust line height
+      ggpubr::text_grob("Fish and wildlife counting", 
+                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+      ),
+      xmax = 23.75, ymax = -76
+    ) +
+    annotation_custom(
+      # using text_grob here bc found solution to adjust line height
+      ggpubr::text_grob("Commercial fish\nand fish processing", 
+                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+      ),
+      xmax = 27.75, ymax = -56
+    ) +
+    annotation_custom(
+      # using text_grob here bc found solution to adjust line height
+      ggpubr::text_grob("Damaged\nbuildings", 
+                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+      ),
+      xmax = 36, ymax = -40
     ) +
     # add custom annotations for types
     annotation_custom(
-      textGrob("Activities", gp = gpar(fontsize = 12)),
+      textGrob("Transportation", gp = gpar(fontsize = 12)),
       xmin = 2.5, xmax = 2.5, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      textGrob("Transportation", gp = gpar(fontsize = 12)),
-      xmin = 9, xmax = 9, ymin = ann_ymin, ymax = ann_ymin
+      textGrob("Utilities", gp = gpar(fontsize = 12)),
+      xmin = 7.75, xmax = 7.75, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      textGrob("Utilities", gp = gpar(fontsize = 12)),
-      xmin = 15, xmax = 15, ymin = ann_ymin, ymax = ann_ymin
+      textGrob("Activities", gp = gpar(fontsize = 12)),
+      xmin = 14, xmax = 14, ymin = ann_ymin, ymax = ann_ymin
+    ) +
+    annotation_custom(
+      ggpubr::text_grob("Building\nstructure", size = 12, lineheight = 0.7),
+      xmin = 19, xmax = 19, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
       textGrob("Other", gp = gpar(fontsize = 12)),
-      xmin = 20.5, xmax = 20.5, ymin = ann_ymin, ymax = ann_ymin
+      xmin = 21, xmax = 21, ymin = ann_ymin, ymax = ann_ymin
     ) +
     coord_cartesian(ylim = c(0, 90), clip = "off")
 }
@@ -199,7 +234,7 @@ fig2_theme <- theme(
   axis.text.x = element_text(
     size = 10,
     angle = 40,
-    margin = margin(t = 1, b = 20),
+    margin = margin(t = 1, b = 32),
     hjust = 0.9
   ),
   axis.title.x = element_blank(),
@@ -215,10 +250,12 @@ fig2_theme <- theme(
   legend.margin = margin(0, -2, 0, -2)
 )
 
-p2 <- mk_fig2("data/impacts_by_type.csv")
+data_dir <- Sys.getenv("DATA_DIR")
+p2 <- mk_fig2(file.path(data_dir, "impacts_by_type.csv"))
 # load fonts once per session
 loadfonts(device = "postscript", quiet = TRUE)
-saveEPS("figs/manuscript/Fig2.eps", p2, hr = 0.5)
+
+saveEPS(file.path(out_dir, "Fig2.eps"), p2, hr = 0.5)
 
 #------------------------------------------------------------------------------
 
@@ -251,8 +288,8 @@ mk_fig3 <- function(fp) {
     )
 }
 
-p3 <- mk_fig3("data/impacts_by_month.csv")
-saveEPS("figs/manuscript/Fig3.eps", p3, hr = 0.5)
+p3 <- mk_fig3(file.path(data_dir, "impacts_by_month.csv"))
+saveEPS(file.path(out_dir, "Fig3.eps"), p3, hr = 0.5)
 
 #------------------------------------------------------------------------------
 
@@ -262,11 +299,16 @@ saveEPS("figs/manuscript/Fig3.eps", p3, hr = 0.5)
 #   within R
 mk_fig4 <- function(fp) {
   freq_wthr <- read_csv(fp, col_types = "ffd", trim_ws = FALSE)
-  p <- ggplot(freq_wthr, aes(x = weather_type, y = count)) + 
-    geom_bar(
-      aes(fill = source), color = "black", size = 0.4, width = 0.4,
-      stat = "identity"
-    ) + 
+  freq_wthr$source <- factor(freq_wthr$source, levels = c("Nome Nugget", "Storm Data"))
+  p <- ggplot(freq_wthr, aes(x = weather_type, y = count, fill = source)) + 
+    geom_col(
+      color = "black", width = 0.6,
+      position = position_dodge2(preserve = "single", padding = 0.2)
+    ) +
+    # geom_bar(
+    #   aes(fill = source), color = "black", size = 0.4, width = 0.4,
+    #   stat = "identity"
+    # ) + 
     scale_fill_manual(values = c("black", "white")) +
     scale_y_continuous(
       breaks = seq(0, 50, 10), 
@@ -285,8 +327,8 @@ mk_fig4 <- function(fp) {
   return(p)
 }
 
-p4 <- mk_fig4("data/impacts_by_weather.csv")
-saveEPS("figs/manuscript/Fig4.eps", p4, hr = 0.5)
+p4 <- mk_fig4(file.path(data_dir, "impacts_by_weather.csv"))
+saveEPS(file.path(out_dir, "Fig4.eps"), p4, width = 5, hr = 0.6)
 
 #------------------------------------------------------------------------------
 
@@ -332,8 +374,8 @@ mk_fig5 <- function(fp) {
   return(p)
 }
 
-p5 <- mk_fig5("data/impacts_by_year.csv")
-saveEPS("figs/manuscript/Fig5.eps", p5, hr = 0.5)
+p5 <- mk_fig5(file.path(data_dir, "impacts_by_year.csv"))
+saveEPS(file.path(out_dir, "Fig5.eps"), p5, hr = 0.5)
 
 #------------------------------------------------------------------------------
 
@@ -364,7 +406,7 @@ mk_fig6 <- function(fp) {
     ) + 
     ylab("Count") + xlab("Decade") + labs(fill = "Source") +
     theme_classic() + 
-    facet_wrap(~as.factor(varname), nrow = 1, scales = "free_y",
+    facet_wrap(~as.factor(varname), nrow = 2, scales = "free_y",
                labeller = as_labeller(mk_tex, default = label_parsed)) + 
     theme(strip.background = element_blank(),
           strip.text = element_text(color = "black", size = 7,
@@ -381,7 +423,8 @@ mk_fig6 <- function(fp) {
     guides(alpha = FALSE)
 }
 
-p6 <- mk_fig6("data/extr_bar_df.Rds")
-saveEPS("figs/manuscript/Fig6.eps", p6, hr = 0.4)
+
+p6 <- mk_fig6(file.path(data_dir, "extremes_bar_df.Rds"))
+saveEPS(file.path(out_dir, "Fig6.eps"), p6, hr = 1)
 
 #------------------------------------------------------------------------------

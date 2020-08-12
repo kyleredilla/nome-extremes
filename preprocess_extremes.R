@@ -6,16 +6,20 @@ get_nome_daily <- function(fn) {
   # inch:meter
   im <- 0.0254
   df <- read.csv(fn) %>%
-    mutate(date = ymd(DATE),
-           SNOW = SNOW * im,
-           SNWD = SNWD * im) %>%
+    mutate(
+      date = ymd(DATE),
+      month = month(date),
+      SNOW = SNOW * im,
+    ) %>%
     filter(date > "1990-01-01") %>%
-    rename(sf = SNOW, sd = SNWD, tmin = TMIN)
+    rename(sf = SNOW, tmin = TMIN, tmax = TMAX)
   
   list(
     tmin = df %>% select(date, tmin),
-    sf = df %>% select(date, sf),
-    sd = df %>% select(date, sd)
+    tmax = df %>% 
+      filter(month == 1 | month == 2) %>%
+      select(date, tmax),
+    sf = df %>% select(date, sf)
   )
 }
 
@@ -172,22 +176,24 @@ count_hwe <- function(df, thr = 30, d = 10, varname) {
 
 # make barplot df
 # mk_bar_df <- function(tmin_df, sf_df, ws_df, era = TRUE) {
-mk_bar_df <- function(tmin_df, sf_df, ws_df) {
-  vn1 <- "Days where $T_{minimum} \\leq -30$ °F"
-  vn2 <- "Days where snowfall $\\geq 20$ cm"
-  vn3 <- "High wind events (wind speed $\\geq 30$ mph for 10h)"
-  vn_levels <- c(vn1, vn2, vn3)
+mk_bar_df <- function(tmin_df, tmax_df, sf_df, ws_df) {
+  vn1 <- "Days where $T_{minimum} \\leq -34.4$ °C"
+  vn2 <- "Days where $T_{max} \\geq 0$ °C"
+  vn3 <- "Days where snowfall $\\geq 20$ cm"
+  vn4 <- "High-speed wind events"
+  vn_levels <- c(vn1, vn2, vn3, vn4)
   bind_rows(
     # count_thr(tmin_df, era = era, varname = vn1),
     count_thr(tmin_df, varname = vn1),
+    count_thr(tmax_df, thr = 32, leq = FALSE, varname = vn2),
     # count_thr(
     #   sf_df, thr = 0.2, leq = FALSE, era = era, varname = vn2
     # ),
     count_thr(
-      sf_df, thr = 0.2, leq = FALSE, varname = vn2
+      sf_df, thr = 0.2, leq = FALSE, varname = vn3
     ),
     # count_hwe(ws_df, era = era, varname = vn3)
-    count_hwe(ws_df, varname = vn3)
+    count_hwe(ws_df, varname = vn4)
   ) %>%
     mutate(varname = factor(varname, levels = vn_levels))
 }
@@ -198,35 +204,51 @@ mk_bar_df <- function(tmin_df, sf_df, ws_df) {
 library(tidyverse)
 library(lubridate)
 
-gcm_tmin <- readRDS("data/gcm_t2min_adj.Rds")
-gcm_sf <- readRDS("data/gcm_sf_adj.Rds")
-gcm_ws <- readRDS("data/gcm_ws_adj.Rds") 
+data_dir <- Sys.getenv("DATA_DIR")
+gcm_tmin <- readRDS(file.path(data_dir, "gcm_t2min_adj.Rds"))
+gcm_tmax <- readRDS(file.path(data_dir, "gcm_t2max_adj.Rds"))
+gcm_sf <- readRDS(file.path(data_dir, "gcm_sf_adj.Rds"))
+gcm_ws <- readRDS(file.path(data_dir, "gcm_ws_adj.Rds")) 
 
-# ignore data from prior to 1990
-era_tmin_adj <- readRDS("data/era5_tmin_adj.Rds") %>%
+# filter tmax data to Jan/Feb
+gcm_tmax <- lapply(gcm_tmax, function(df) {
+  df %>%
+    mutate(month = month(date)) %>%
+    filter(month == 1 | month == 2) %>%
+    select(sim, sim_adj, date)
+})
+
+# ignore data from prior to 1990 (and other than Jan/Feb for Tmax)
+era_tmin_adj <- readRDS(file.path(data_dir, "era5_tmin_adj.Rds")) %>%
   filter(date >= "1990-01-01") %>%
   rename(sim_adj = tmin_adj)
-era_sf_adj <- readRDS("data/era5_sf_adj.Rds") %>%
+era_tmax_adj <- readRDS(file.path(data_dir, "era5_tmax_adj.Rds")) %>%
+  mutate(month = month(date)) %>%
+  filter(date >= "1990-01-01" & (month == 1 | month == 2)) %>%
+  rename(sim_adj = tmax_adj)
+era_sf_adj <- readRDS(file.path(data_dir, "era5_sf_adj.Rds")) %>%
   filter(date >= "1990-01-01") %>%
   rename(sim_adj = sf_adj)
-era_ws_adj <- readRDS("data/era5_ws_adj.Rds") %>%
+era_ws_adj <- readRDS(file.path(data_dir, "era5_ws_adj.Rds")) %>%
   filter(ts >= ymd("1990-01-01")) %>%
   rename(sim_adj = ws_adj)
 
 # daily observations
-fn <- "../data-raw/GHCND/Nome_snow_tmin_19800101-20191231.csv"
-obs_lst <- get_nome_daily(fn)
+ghcnd_fp <- file.path(data_dir, "ghcnd_nome_19800101-20191231.csv")
+obs_lst <- get_nome_daily(ghcnd_fp)
 
 # hourly observations (wind)
-fn <- "../data-raw/IEM/ASOS/PAOM_wind_19800101-20200101.txt"
-obs_lst$ws <- get_nome_ws(fn)
+asos_dir <- Sys.getenv("ASOS_DIR")
+asos_fp <- file.path(asos_dir, "PAOM_wind_19800101-20200101.txt")
+obs_lst$ws <- get_nome_ws(asos_fp)
 
 tmin_df <- mk_df(gcm_tmin[[2]], gcm_tmin[[4]], era_tmin_adj, obs_lst$tmin)
+tmax_df <- mk_df(gcm_tmax[[2]], gcm_tmax[[4]], era_tmax_adj, obs_lst$tmax)
 sf_df <- mk_df(gcm_sf[[2]], gcm_sf[[4]], era_sf_adj, obs_lst$sf)
 ws_df <- mk_df(gcm_ws[[2]], gcm_ws[[4]], era_ws_adj, obs_lst$ws)
 
 # save data.frame ready for barplot
-bar_df <- mk_bar_df(tmin_df, sf_df, ws_df)
-saveRDS(bar_df, "data/extr_bar_df.Rds")
+bar_df <- mk_bar_df(tmin_df, tmax_df, sf_df, ws_df)
+saveRDS(bar_df, file.path(data_dir, "extremes_bar_df.Rds"))
 
 #------------------------------------------------------------------------------

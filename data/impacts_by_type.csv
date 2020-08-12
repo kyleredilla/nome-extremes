@@ -1,10 +1,4 @@
 type,subtype,source,count
-Activities,Mining,Nome Nugget,13
-Activities,Other,Nome Nugget,39
-Activities,"       ",Nome Nugget,24
-Activities,Subsistence,Nome Nugget,20
-Activities," ",Nome Nugget,NA
-Activities,"  ",Nome Nugget,NA
 Transportation,Air,Nome Nugget,34
 Transportation,Port,Nome Nugget,19
 Transportation,Roads,Nome Nugget,81
@@ -17,7 +11,17 @@ Utilities,Water,Nome Nugget,17
 Utilities,Utilities,Storm Data,9
 Utilities,"     ",Nome Nugget,NA
 Utilities,"      ",Nome Nugget,NA
-Other,Bldg. structure,Nome Nugget,18
-Other, Other ,Nome Nugget,19
-Other, Bldg. structure ,Storm Data,12
-Other,  Other  ,Storm Data,10
+Activities,Mining,Nome Nugget,13
+Activities,Other,Nome Nugget,16
+Activities,"       ",Nome Nugget,24
+Activities,Subsistence,Nome Nugget,20
+Activities," ",Nome Nugget,NA
+Activities,"  ",Nome Nugget,NA
+Activities,Construction,Nome Nugget,6
+Activities,"        ",Nome Nugget,6
+Activities,"         ",Nome Nugget,6
+Bldg. structure,Damaged buildings,Nome Nugget,18 
+Bldg. structure,Damagged buildings,Storm Data,12
+
+Other,Other,Nome Nugget,19
+Other,Other,Storm Data,10

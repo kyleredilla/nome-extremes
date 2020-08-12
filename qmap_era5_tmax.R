@@ -1,13 +1,18 @@
 # quantile map the max temp data
 
 #-- Functions -----------------------------------------------------------------
+# convert C to F
+C_to_F <- function(deg_C) {
+  deg_C * (9/5) + 32
+}
+
 # read and prep daily nome data
 get_nome_tmax <- function(fn) {
   # Daily data 
   # only need these vars
-  vars <- c("DATE", "TMAX", "TMAX_ATTRIBUTES")
+  vars <- c("DATE", "TMAX")
   # better rnames
-  bnames <- c("date", "tmax", "tmax_attr")
+  bnames <- c("date", "tmax")
   nome <- fread(fn, select = vars, col.names = bnames)
   # convert to correct type and units (m and C) and 
   #   subset to matching time frame
@@ -15,7 +20,7 @@ get_nome_tmax <- function(fn) {
   end <- ymd("2018-12-31")
   # tmax units in tenths of degrees
   nome[, ':=' (date = ymd(date),
-               tmax = as.numeric(tmax) / 10)]
+               tmax = as.numeric(tmax))]
   nome[date >= begin & date <= end, tmax]
 }
 
@@ -24,7 +29,8 @@ get_era5_tmax <- function(fn) {
   readRDS(fn) %>%
     ungroup() %>%
     filter(ij == "1,2") %>%
-    select(date, tmax)
+    select(date, tmax) %>%
+    mutate(tmax = C_to_F(tmax))
 }
 
 #------------------------------------------------------------------------------
@@ -36,10 +42,10 @@ library(dplyr)
 
 source("helpers.R")
 # observed data
-obs_fp <- file.path(Sys.getenv("GHCND_DIR"), "Nome.csv")
+data_dir <- Sys.getenv("DATA_DIR")
+obs_fp <- file.path(data_dir, "ghcnd_nome_19800101-20191231.csv")
 nome_tmax <- get_nome_tmax(obs_fp)
 # ERA5 data
-data_dir <- Sys.getenv("DATA_DIR")
 era_fp <- file.path(data_dir, "era5.Rds")
 era5_tmax <- get_era5_tmax(era_fp)
 
@@ -53,7 +59,10 @@ ecdf_lst <- list(
 )
 
 # ECDFs
-p <- ggECDF_compare(ecdf_lst, xmin = 0, var = "tmax", xmax_adj = 0)
+p <- ggECDF_compare(
+  ecdf_lst, p_title = "Nome T2max ERA5 -> Observed", 
+  xmin = -40, var = bquote(T[max]), xmax_adj = 20
+)
 # save validation
 qmap_dir <- file.path(Sys.getenv("FILES_DIR"), "qmap")
 dir.create(qmap_dir, showWarnings = FALSE)
