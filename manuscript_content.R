@@ -79,16 +79,22 @@ make_fig1 <- function(milepost_fp, roads_fp) {
   attr(ak_map, "bb") <- ak_attrs
   
   # for town labels
-  point_names <- c("Nome", "Teller", "Council", "Solomon")
-  lon <- c(-165.4064, -166.3608, -163.6774, -164.4392)
-  lat <- c(64.5011, 65.2636, 64.8953, 64.5608)
-  names(lon) <- point_names
-  names(lat) <- point_names
+  # point_names <- c("Nome", "Teller", "Council", "Solomon")
+  # lon <- c(-165.4064, -166.3608, -163.6774, -164.4392)
+  # lat <- c(64.5011, 65.2636, 64.8953, 64.5608)
+  # names(lon) <- point_names
+  # names(lat) <- point_names
   
   village_points <- data.frame(
     x = c(-165.4064, -166.3608, -163.6774, -164.4392),
     y = c(64.5011, 65.2636, 64.8953, 64.5608),
     name = c("Nome", "Teller", "Council", "Solomon")
+  )
+  
+  road_points <- data.frame(
+    x = c(-163.5, -166.9, -165.2),
+    y = c(64.7, 65.1, 65.3),
+    name = c("Nome-Council Rd", "Nome-Teller Hwy", "Kougarok Rd")
   )
   
   # DOT road system shapefile from http://dot.alaska.gov/stwdplng/mapping/transdata/DOT_RoadSystem_091318.zip
@@ -106,16 +112,26 @@ make_fig1 <- function(milepost_fp, roads_fp) {
   mp_names <- as.character(milepost_sp$ROUTE_NAME)
   
   # make df's from road system and milepost shapefiles and combine
+  # code to make DFs for seasonal/nonseasonal roads
+  # roads <- rbind(
+  #   make_rs_df("glacier creek road", "roads"),
+  #   # subsample for displaying dotted line
+  #   make_rs_df("dexter bypass", "roads (summer only)") %>%
+  #     filter(order %% 5 == 0),
+  #   make_mp_df("kougarok", 13),
+  #   make_mp_df("nome-teller", 8),
+  #   make_mp_df("council", 3)
+  # )
+  
+  # classify all roads as "road"
   roads <- rbind(
     make_rs_df("glacier creek road", "roads"),
-    # subsample for displaying dotted line
-    make_rs_df("dexter bypass", "roads (summer only)") %>%
-      filter(order %% 5 == 0),
-    make_mp_df("kougarok", 13),
-    make_mp_df("nome-teller", 8),
-    make_mp_df("council", 3)
+    make_rs_df("dexter bypass", "roads"),
+    make_rs_df("kougarok", "roads"),
+    make_rs_df("nome-teller", "roads"),
+    make_rs_df("council road", "roads")
   )
-
+  
   # Keep labels: Bering Sea, Chukchi Sea, Beaufort Sea
   # labs_df <- data.frame(
   #   lon = c(-172, -171, -140),
@@ -179,6 +195,14 @@ make_fig1 <- function(milepost_fp, roads_fp) {
       family = "serif"
     ) + 
     geom_text(
+      aes(x = x, y = y, label = name),
+      road_points,
+      color = "black",
+      nudge_x = c(-0.1, 0.15, -0.05), 
+      nudge_y = c(-0.05, -0.06, 0), 
+      family = "serif", size = 3,
+    ) + 
+    geom_text(
       aes(x = -168.5, y = 65.7, label = "Bering\nStrait"),
       family = "serif", fontface = "italic",
       color = "gray40", size = 4
@@ -199,7 +223,7 @@ make_fig1 <- function(milepost_fp, roads_fp) {
       axis.title = element_blank(),
       axis.text = element_text(family = "serif", size = 8),
       panel.border = element_rect(colour = "black", fill=NA, size=2),
-      legend.position = c(0.76, 0.06),
+      legend.position = c(0.76, 0.04),
       legend.title = element_blank(),
       legend.background = element_rect(color = "black", fill = "white"),
       legend.key = element_blank(),
