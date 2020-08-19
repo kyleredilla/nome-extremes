@@ -11,10 +11,52 @@
 
 #-- Figure 1 ------------------------------------------------------------------
 # figure 1 - map of Alaska with Nome labelled
-mk_fig1 <- function() {
+make_fig1 <- function(milepost_fp, roads_fp) {
+  # make df from roadsystem shapefile
+  # relies on roads_sp, roads_names, status_levels, bb from parent env
+  make_rs_df <- function(name, status) {
+    idx <- which(
+      str_detect(roads_names, regex(name, ignore_case = TRUE))
+    )
+    subset(roads_sp, Route_Name == roads_names[idx]) %>%
+      spTransform(CRS("+init=epsg:4326")) %>%
+      fortify %>%
+      filter(lat > bb[2] ) %>%
+      mutate(status = factor(status, status_levels))
+  }
+  
+  # create dataframe of seasonality by milepost
+  # relies on status_levels, milepost_sp, mp_names from parent env
+  make_mp_df <- function(name, mp) {
+    # convert to SpatialLinesDataFrame seems needed for fortify
+    make_df <- function(df, id) {
+      df <- df[order(df$Milepost_N),]
+      coordinates(df) %>% 
+        as.data.frame %>% 
+        select(coords.x1, coords.x2) %>% 
+        Line %>% 
+        list %>% 
+        Lines(id) %>%
+        fortify
+    }
+    idx <- which(str_detect(mp_names, regex(name, ignore_case = TRUE)))
+    sp_df <- subset(milepost_sp, ROUTE_NAME == mp_names[idx][1]) %>%
+      spTransform(CRS("+init=epsg:4326"))
+    # subset year-round and seasonal partitions, fortify, and combine
+    yrnd <- subset(sp_df, Milepost_N <= mp) %>%
+      make_df(paste0(name, "-yr")) %>%
+      mutate(status = factor("roads", levels = status_levels))
+    subset(sp_df, Milepost_N > mp) %>%
+      make_df(paste0(name, "-seas")) %>%
+      mutate(
+        status = factor("roads (summer only)", levels = status_levels)
+      ) %>%
+      rbind(yrnd)
+  }
+  
   # get tiles
   # seward peninsula
-  bb <- c(-169.1, 63.4, -161.7, 66.1)
+  bb <- c(-168.9, 64.1, -162.05, 66.65)
   map <- get_stamenmap(
     bbox = bb, zoom = 8,
     maptype = "terrain-background", color = "bw", messaging = FALSE
@@ -36,13 +78,44 @@ mk_fig1 <- function() {
   attr(map, "bb") <- attrs
   attr(ak_map, "bb") <- ak_attrs
   
+  # for town labels
+  point_names <- c("Nome", "Teller", "Council", "Solomon")
+  lon <- c(-165.4064, -166.3608, -163.6774, -164.4392)
+  lat <- c(64.5011, 65.2636, 64.8953, 64.5608)
+  names(lon) <- point_names
+  names(lat) <- point_names
   
-  # secondary AK roads shapefile from http://www.asgdc.state.ak.us/#182
-  minor_sp <- readOGR("data/shapefiles/mv_infra_road_ln.shp")
-  # filter to area around Nome
-  minor <- fortify(spTransform(minor_sp, CRS("+init=epsg:4326"))) %>%
-    filter(long < -164.4 & long > -165.8 & lat > bb[2] & lat < 64.8)
+  village_points <- data.frame(
+    x = c(-165.4064, -166.3608, -163.6774, -164.4392),
+    y = c(64.5011, 65.2636, 64.8953, 64.5608),
+    name = c("Nome", "Teller", "Council", "Solomon")
+  )
   
+  # DOT road system shapefile from http://dot.alaska.gov/stwdplng/mapping/transdata/DOT_RoadSystem_091318.zip
+  roads_sp <- readOGR(roads_fp)
+  # roads that are EITHER seasonal OR year-round
+  roads_names <- as.character(roads_sp$Route_Name)
+  # remove OLD GLACIER CREEK RD (regex laziness)
+  roads_names <- roads_names[roads_names != "OLD GLACIER CREEK ROAD"]
+  status_levels <- c("roads (summer only)", "roads")
+
+  # Roads with partial seasonality
+  # roads available in mileposts shapefile: 
+  #   Kougarok, Nome-Teller, Nome-Council
+  milepost_sp <- readOGR(milepost_fp)
+  mp_names <- as.character(milepost_sp$ROUTE_NAME)
+  
+  # make df's from road system and milepost shapefiles and combine
+  roads <- rbind(
+    make_rs_df("glacier creek road", "roads"),
+    # subsample for displaying dotted line
+    make_rs_df("dexter bypass", "roads (summer only)") %>%
+      filter(order %% 5 == 0),
+    make_mp_df("kougarok", 13),
+    make_mp_df("nome-teller", 8),
+    make_mp_df("council", 3)
+  )
+
   # Keep labels: Bering Sea, Chukchi Sea, Beaufort Sea
   # labs_df <- data.frame(
   #   lon = c(-172, -171, -140),
@@ -51,7 +124,10 @@ mk_fig1 <- function() {
   # )
   # 
   p_ak <- ggmap(ak_map) + 
-    geom_point(aes(x = -165.4064, y = 64.5011), color = "black", size = 2) +
+    geom_path(
+      aes(x = x, y = y),
+      data.frame(x = bb[c(1, 1, 3, 3, 1)], y = bb[c(2, 4, 4, 2, 2)])
+    ) + 
     theme(
       axis.title = element_blank(), 
       axis.text  = element_blank(),
@@ -60,15 +136,25 @@ mk_fig1 <- function() {
       panel.border = element_rect(colour = "black", fill=NA, size=1)
     )
   
-  xbreaks <- seq(-169, -161, 2)
+  xbreaks <- seq(-168, -162, 2)
   ybreaks <- seq(64, 66, 1)
   p <- ggmap(map) + 
     geom_path(
-      aes(x = long, y = lat, group = group), 
-      data = minor, colour ='gray40', size = .6
-    ) + 
+      aes(x = long, y = lat, group = id, color = status, linetype = status),
+      data = roads, size = .5
+    ) +
+    # geom_path(
+    #   aes(x = long, y = lat, group = id, color = status, linetype = status),
+    #   data = roads, size = .5, color = "gray20"
+    # ) +
+    scale_linetype_manual(
+      values = c("roads" = "solid", "roads (summer only)" = "dashed")
+    ) +
+    scale_color_manual(
+      values = c("roads" = "black", "roads (summer only)" = "gray20")
+    ) +
     inset(
-      ggplotGrob(p_ak), xmin = bb[1] + 0.15, xmax = -166.5, ymin = bb[2], ymax = 64.53
+      ggplotGrob(p_ak), xmin = bb[1] + 0.05, xmax = -166.8, ymin = bb[2] + 0.04, ymax = 64.95
     ) +
     scale_x_continuous(
       breaks = xbreaks,
@@ -80,12 +166,29 @@ mk_fig1 <- function() {
       labels = paste0(as.character(ybreaks), "°N"),
       expand = c(0, 0)
     ) +
+    geom_point(
+      aes(x = x, y = y),
+      data = village_points
+    ) +
     geom_text(
-      aes(-165.4064, 64.5011, label = "Nome"), 
-      color = "black", size = 4, nudge_x = -0.2, nudge_y = -0.05, family = "serif"
+      aes(x = x, y = y, label = name),
+      village_points,
+      color = "black", 
+      nudge_x = c(-0.2, -0.25, -0.2, 0.25), 
+      nudge_y = c(-0.05, 0.02, 0.06, -0.06), 
+      family = "serif"
+    ) + 
+    geom_text(
+      aes(x = -168.5, y = 65.7, label = "Bering\nStrait"),
+      family = "serif", fontface = "italic",
+      color = "gray40", size = 4
+    ) + 
+    # geom_text(
+    #   aes(-165.4064, 64.5011, label = "Nome"), 
+    #   color = "black", size = 4, nudge_x = -0.2, nudge_y = -0.05, family = "serif"
       # alpha = 0.5, label.padding = unit(0.15, "lines"), 
       # label.size = 0, label.r = unit(0.2, "lines")
-    ) +
+    # ) +
     # geom_text(
     #   data = labs_df,
     #   aes(label = text), 
@@ -96,14 +199,19 @@ mk_fig1 <- function() {
       axis.title = element_blank(),
       axis.text = element_text(family = "serif", size = 8),
       panel.border = element_rect(colour = "black", fill=NA, size=2),
-      legend.position = "none"
-    )
+      legend.position = c(0.76, 0.06),
+      legend.title = element_blank(),
+      legend.background = element_rect(color = "black", fill = "white"),
+      legend.key = element_blank(),
+      legend.margin = margin(-5, 5, 0, 5) 
+    ) 
 }
 
 suppressMessages({
   library(ggmap)
   library(rgdal)
   library(dplyr)
+  library(stringr)
   library(grid)
   #library(maptools)
   #library(sp)
@@ -111,8 +219,12 @@ suppressMessages({
 })
 
 # attribution: Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL.
+#mileposts fp
+data_dir <- Sys.getenv("DATA_DIR")
+milepost_fp <- file.path(data_dir, "shapefiles", "Mileposts_091318.shp")
+roads_fp <- file.path(data_dir, "shapefiles", "DOT_RoadSystem_091318.shp")
 
-p1 <- mk_fig1()
+p1 <- make_fig1(milepost_fp, roads_fp)
 out_dir <- file.path(Sys.getenv("FILES_DIR"), "manuscript-figures")
 dir.create(out_dir, showWarnings = FALSE)
 ggsave(
@@ -127,13 +239,13 @@ ggsave(
 # read and prep frequency by type data
 # Note: these data are modified to make desired plot achieved more easily
 #   within R
-mk_fig2 <- function(fp) {
+make_fig2 <- function(fp) {
   freq_type <- read_csv(fp, col_types = "fffd", trim_ws = FALSE)
   # set ymin for annotations
-  ann_ymin <- -50
+  ann_ymin <- -75
   p <- ggplot(freq_type, aes(x = subtype, y = count, fill = source)) + 
     geom_col(
-      color = "black", width = 0.8,
+      color = "black", width = 1,
       position = position_dodge2(preserve = "single", padding = 0.2)
     ) +
     # geom_bar(
@@ -146,7 +258,7 @@ mk_fig2 <- function(fp) {
       limits = c(0, 95),
       expand = c(0, 0)
     ) +
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 18)) + 
+    #scale_x_discrete(labels = function(x) str_wrap(x, width = 100)) + 
     ylab("Count") + 
     theme_bw() +
     fig2_theme +
@@ -154,51 +266,51 @@ mk_fig2 <- function(fp) {
     annotation_custom(
       # using text_grob here bc found solution to adjust line height
       ggpubr::text_grob("Public and Municipal\nClosures", 
-        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+        size = 10, rot = 60, lineheight = 0.7, hjust = 0.2
       ),
-      xmax = 17, ymax = -69
+      xmax = 10.5, ymax = -95
     ) +
     annotation_custom(
       # using text_grob here bc found solution to adjust line height
       ggpubr::text_grob("Fish and wildlife counting", 
-                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+                        size = 10, rot = 60, lineheight = 0.7, hjust = 0.2
       ),
-      xmax = 23.75, ymax = -76
+      xmax = 17.25, ymax = -109
     ) +
     annotation_custom(
       # using text_grob here bc found solution to adjust line height
       ggpubr::text_grob("Commercial fish\nand fish processing", 
-                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+                        size = 10, rot = 60, lineheight = 0.7, hjust = 0.2
       ),
-      xmax = 27.75, ymax = -56
+      xmax = 20.7, ymax = -80
     ) +
-    annotation_custom(
-      # using text_grob here bc found solution to adjust line height
-      ggpubr::text_grob("Damaged\nbuildings", 
-                        size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
-      ),
-      xmax = 36, ymax = -40
-    ) +
+    # annotation_custom(
+    #   # using text_grob here bc found solution to adjust line height
+    #   ggpubr::text_grob("Damaged\nbuildings", 
+    #                     size = 10, rot = 40, lineheight = 0.7, hjust = 0.2
+    #   ),
+    #   xmax = 36, ymax = -40
+    # ) +
     # add custom annotations for types
     annotation_custom(
       textGrob("Transportation", gp = gpar(fontsize = 12)),
-      xmin = 2.5, xmax = 2.5, ymin = ann_ymin, ymax = ann_ymin
-    ) +
-    annotation_custom(
-      textGrob("Utilities", gp = gpar(fontsize = 12)),
-      xmin = 7.75, xmax = 7.75, ymin = ann_ymin, ymax = ann_ymin
+      xmin = 2.75, xmax = 2.75, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
       textGrob("Activities", gp = gpar(fontsize = 12)),
-      xmin = 14, xmax = 14, ymin = ann_ymin, ymax = ann_ymin
+      xmin = 9.5, xmax = 9.5, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
-      ggpubr::text_grob("Building\nstructure", size = 12, lineheight = 0.7),
-      xmin = 19, xmax = 19, ymin = ann_ymin, ymax = ann_ymin
+      textGrob("Utilities", gp = gpar(fontsize = 12)),
+      xmin = 15.75, xmax = 15.75, ymin = ann_ymin, ymax = ann_ymin
+    ) +
+    annotation_custom(
+      ggpubr::text_grob("Damaged\nbuildings", size = 12, lineheight = 0.7),
+      xmin = 18.8, xmax = 18.8, ymin = ann_ymin, ymax = ann_ymin
     ) +
     annotation_custom(
       textGrob("Other", gp = gpar(fontsize = 12)),
-      xmin = 21, xmax = 21, ymin = ann_ymin, ymax = ann_ymin
+      xmin = 21.2, xmax = 21.2, ymin = ann_ymin, ymax = ann_ymin
     ) +
     coord_cartesian(ylim = c(0, 90), clip = "off")
 }
@@ -233,9 +345,9 @@ fig2_theme <- theme(
   axis.text = element_text(color = "black", size = 11),
   axis.text.x = element_text(
     size = 10,
-    angle = 40,
-    margin = margin(t = 1, b = 32),
-    hjust = 0.9
+    angle = 60,
+    margin = margin(t = 1, b = 50),
+    hjust = 0.99
   ),
   axis.title.x = element_blank(),
   axis.title.y = element_text(size = 13, margin = margin(r = 7)),
@@ -250,18 +362,20 @@ fig2_theme <- theme(
   legend.margin = margin(0, -2, 0, -2)
 )
 
+{
 data_dir <- Sys.getenv("DATA_DIR")
-p2 <- mk_fig2(file.path(data_dir, "impacts_by_type.csv"))
-# load fonts once per session
+p2 <- make_fig2(file.path(data_dir, "impacts_by_type.csv"))
+# load fonts once... per machine?
 loadfonts(device = "postscript", quiet = TRUE)
 
-saveEPS(file.path(out_dir, "Fig2.eps"), p2, hr = 0.5)
+saveEPS(file.path(out_dir, "Fig2.eps"), p2, hr = 0.55)
+}
 
 #------------------------------------------------------------------------------
 
 #-- Figure 3 ------------------------------------------------------------------
 # Impact frequencies by month
-mk_fig3 <- function(fp) {
+make_fig3 <- function(fp) {
   freq_mo <- read_csv(fp, col_types = "ffd")
   freq_mo[freq_mo == 0] <- NA
   p <- ggplot(freq_mo, aes(x = month, y = count, group = source)) + 
@@ -288,7 +402,7 @@ mk_fig3 <- function(fp) {
     )
 }
 
-p3 <- mk_fig3(file.path(data_dir, "impacts_by_month.csv"))
+p3 <- make_fig3(file.path(data_dir, "impacts_by_month.csv"))
 saveEPS(file.path(out_dir, "Fig3.eps"), p3, hr = 0.5)
 
 #------------------------------------------------------------------------------
@@ -297,7 +411,7 @@ saveEPS(file.path(out_dir, "Fig3.eps"), p3, hr = 0.5)
 # Impact frequencies by weather type
 # Note: these data are modified to make desired plot achieved more easily
 #   within R
-mk_fig4 <- function(fp) {
+make_fig4 <- function(fp) {
   freq_wthr <- read_csv(fp, col_types = "ffd", trim_ws = FALSE)
   freq_wthr$source <- factor(freq_wthr$source, levels = c("Nome Nugget", "Storm Data"))
   p <- ggplot(freq_wthr, aes(x = weather_type, y = count, fill = source)) + 
@@ -327,14 +441,14 @@ mk_fig4 <- function(fp) {
   return(p)
 }
 
-p4 <- mk_fig4(file.path(data_dir, "impacts_by_weather.csv"))
+p4 <- make_fig4(file.path(data_dir, "impacts_by_weather.csv"))
 saveEPS(file.path(out_dir, "Fig4.eps"), p4, width = 5, hr = 0.6)
 
 #------------------------------------------------------------------------------
 
 #-- Figure 5 ------------------------------------------------------------------
 # Impact frequencies by year
-mk_fig5 <- function(fp) {
+make_fig5 <- function(fp) {
   freq_yr <- read_csv(fp, col_types = "dfd")
   p <- ggplot(freq_yr, aes(x = year, y = count, group = source)) + 
     geom_line() +
@@ -374,7 +488,7 @@ mk_fig5 <- function(fp) {
   return(p)
 }
 
-p5 <- mk_fig5(file.path(data_dir, "impacts_by_year.csv"))
+p5 <- make_fig5(file.path(data_dir, "impacts_by_year.csv"))
 saveEPS(file.path(out_dir, "Fig5.eps"), p5, hr = 0.5)
 
 #------------------------------------------------------------------------------
@@ -383,11 +497,11 @@ saveEPS(file.path(out_dir, "Fig5.eps"), p5, hr = 0.5)
 suppressMessages(library(lubridate))
 # Extreme event decadal frequencies for historical (ERA5/Observed) and
 #   future (GCMs)
-mk_fig6 <- function(fp) {
+make_fig6 <- function(fp) {
   df <- readRDS(fp)
   cols <- c("darkolivegreen3", ggsci::pal_jco("default")(4)[c(1, 4)])
   cols <- c("white", "gray85", "gray40")
-  mk_tex <- function(string) latex2exp::TeX(string)
+  make_tex <- function(string) latex2exp::TeX(string)
   
   p <- ggplot(df, aes(x = decade, y = avc)) + 
     geom_bar(aes(fill = mod), color = "black", size = 0.25, stat = "identity", position = "dodge") + 
@@ -407,7 +521,7 @@ mk_fig6 <- function(fp) {
     ylab("Count") + xlab("Decade") + labs(fill = "Source") +
     theme_classic() + 
     facet_wrap(~as.factor(varname), nrow = 2, scales = "free_y",
-               labeller = as_labeller(mk_tex, default = label_parsed)) + 
+               labeller = as_labeller(make_tex, default = label_parsed)) + 
     theme(strip.background = element_blank(),
           strip.text = element_text(color = "black", size = 7,
                                     margin = margin(b = 0, t = 0)),
@@ -424,7 +538,7 @@ mk_fig6 <- function(fp) {
 }
 
 
-p6 <- mk_fig6(file.path(data_dir, "extremes_bar_df.Rds"))
+p6 <- make_fig6(file.path(data_dir, "extremes_bar_df.Rds"))
 saveEPS(file.path(out_dir, "Fig6.eps"), p6, hr = 1)
 
 #------------------------------------------------------------------------------
