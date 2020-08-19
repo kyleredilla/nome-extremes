@@ -50,9 +50,9 @@ get_nome_ws <- function(fn, thr = 30) {
 
 # make df from results of both GCMs and ERA
 mk_df <- function(cm3, ccsm4, era5, obs) {
-  mods <- c("CM3", "CCSM4", "ERA5", "Observed")
+  mods <- c("CM3", "CCSM4", "ERA5", "Station reports")
   obs <- obs %>%
-    mutate(mod = factor("Observed", levels = mods)) %>%
+    mutate(mod = factor("Station reports", levels = mods)) %>%
     rename(sim_adj = names(.)[2])
   era5 <- era5 %>%
     mutate(mod = factor("ERA5", levels = mods)) %>%
@@ -81,14 +81,14 @@ mk_df <- function(cm3, ccsm4, era5, obs) {
 }
 
 # count obs surpassing threshold (for tmin and sf)
-# era arg is flag for whether to count from ERA (TRUE) or Observed (FALSE)
+# era arg is flag for whether to count from ERA (TRUE) or Station reports (FALSE)
 count_thr <- function(df, 
                       thr = -30, 
                       leq = TRUE, 
                       # era = TRUE, 
                       varname) {
-  # new_lvls = if(era) c("CM3/CCSM4", "ERA5") else c("CM3/CCSM4", "Observed")
-  new_lvls = c("CM3/CCSM4", "ERA5", "Observed")
+  # new_lvls = if(era) c("CM3/CCSM4", "ERA5") else c("CM3/CCSM4", "Station reports")
+  new_lvls = c("CM3/CCSM4", "ERA5", "Station reports")
   df <- df %>% 
     group_by(mod, decade) %>%
     # group_by(mod, year) %>%
@@ -99,7 +99,7 @@ count_thr <- function(df,
   # historical, either ERA or Observed
   hs <- df %>% 
     #filter(mod == {if(era) "ERA5" else "Observed"}) %>%
-    filter(mod == "ERA5" | mod == "Observed") %>%
+    filter(mod == "ERA5" | mod == "Station reports") %>%
     mutate(mod = factor(mod, levels = new_lvls),
            minc = 0, maxc = 0) %>%
     rename(avc = count) %>%
@@ -125,7 +125,7 @@ count_thr <- function(df,
 # count_hwe <- function(df, thr = 30, d = 10, era = TRUE, varname) {
 count_hwe <- function(df, thr = 30, d = 10, varname) {
   # new_lvls = if(era) c("CM3/CCSM4", "ERA5") else c("CM3/CCSM4", "Observed")
-  new_lvls = c("CM3/CCSM4", "ERA5", "Observed")
+  new_lvls = c("CM3/CCSM4", "ERA5", "Station reports")
   hws <- df %>% filter(sim_adj >= thr)
   dts <- as.numeric(
     difftime(hws$ts[-1], hws$ts[-(length(hws$ts))], units = "hours")
@@ -154,7 +154,7 @@ count_hwe <- function(df, thr = 30, d = 10, varname) {
   # historical, either ERA or Observed 
   hs <- hws %>% 
     # filter(mod == {if(era) "ERA5" else "Observed"}) %>%
-    filter(mod == "ERA5" | mod == "Observed") %>%
+    filter(mod == "ERA5" | mod == "Station reports") %>%
     mutate(mod = factor(mod, levels = new_lvls),
            minc = 0, maxc = 0) %>%
     rename(avc = count) %>%
@@ -177,10 +177,10 @@ count_hwe <- function(df, thr = 30, d = 10, varname) {
 # make barplot df
 # mk_bar_df <- function(tmin_df, sf_df, ws_df, era = TRUE) {
 mk_bar_df <- function(tmin_df, tmax_df, sf_df, ws_df) {
-  vn1 <- "Days where $T_{minimum} \\leq -34.4$ °C"
-  vn2 <- "Days where $T_{max} \\geq 0$ °C"
+  vn1 <- "Days where $T_{minimum} \\leq -30$ °F"
+  vn2 <- "Days where $T_{maximum} \\geq 32$ °F (Jan and Feb only)"
   vn3 <- "Days where snowfall $\\geq 20$ cm"
-  vn4 <- "High-speed wind events"
+  vn4 <- "High-speed wind events (wind speed$ ^3$ 30 mph for 10 h)"
   vn_levels <- c(vn1, vn2, vn3, vn4)
   bind_rows(
     # count_thr(tmin_df, era = era, varname = vn1),
